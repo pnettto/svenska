@@ -82,6 +82,14 @@ function displayWord(word) {
     translationElement.classList.add('hidden');
 }
 
+function displayNewWord() {
+    const currentWords = localStorage.getItem(CACHE_KEY);
+    if (currentWords) {
+        const wordsArray = JSON.parse(currentWords);
+        displayWord(getRandomWord(wordsArray));
+    }
+}
+
 // Fetch words from CSV and update cache
 async function fetchAndCacheWords() {
     try {
@@ -131,22 +139,11 @@ async function init() {
     // Set up click handler for Swedish word to reveal translation
     document.getElementById('swedishWord').addEventListener('click', () => {
         const translationElement = document.getElementById('englishTranslation');
-        translationElement.classList.toggle('hidden');
-    });
-    
-    // Set up speak button click handler
-    document.getElementById('speakBtn').addEventListener('click', () => {
-        if (currentWord) {
+        if (translationElement.classList.contains('hidden')) {
+            translationElement.classList.remove('hidden')
             speakWord(currentWord.swedish);
-        }
-    });
-    
-    // Set up button click handler
-    document.getElementById('newWordBtn').addEventListener('click', () => {
-        const currentWords = localStorage.getItem(CACHE_KEY);
-        if (currentWords) {
-            const wordsArray = JSON.parse(currentWords);
-            displayWord(getRandomWord(wordsArray));
+        } else {
+            displayNewWord()
         }
     });
 }
