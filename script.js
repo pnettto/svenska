@@ -30,7 +30,7 @@ function initializeSpeech() {
     }
 }
 
-// Speak the Swedish word
+// Speak the Swedish word using Azure Speech
 function speakWord(text) {
     if (!azureSynthesizer) {
         console.error('Speech synthesizer not initialized');
@@ -101,12 +101,13 @@ async function fetchAndCacheWords() {
 
 // Initialize the extension
 async function init() {
-    // Initialize speech synthesis
+    // Initialize Azure speech synthesis
     initializeSpeech();
     
     // Try to get cached words first for immediate display
     let words = null;
     const cachedWords = localStorage.getItem(CACHE_KEY);
+
     
     if (cachedWords) {
         try {
