@@ -1,5 +1,5 @@
 // CSV URL
-const CSV_URL = 'https://raw.githubusercontent.com/pnettto/svenska-flashcards/refs/heads/main/flashcards/vocabulary-vardagslivert.csv';
+const CSV_URL = 'words.csv';
 const CACHE_KEY = 'swedishWords';
 
 // Azure Speech Configuration
