@@ -208,6 +208,13 @@ async function fetchAndCacheWords() {
 
 // Initialize the extension
 async function init() {
+    // Wake up the proxy server
+    try {
+        await fetch(`${PROXY_API_URL}/health`);
+    } catch (error) {
+        console.warn('Failed to wake up proxy server:', error);
+    }
+    
     // Initialize Azure speech synthesis
     initializeSpeech();
     
