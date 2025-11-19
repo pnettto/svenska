@@ -214,7 +214,8 @@ function updateNavigationButtons() {
         prevBtn.disabled = historyIndex <= 0;
     }
     if (nextBtn) {
-        nextBtn.disabled = historyIndex >= wordHistory.length - 1;
+        // Next button is always enabled since we can always show a new word
+        nextBtn.disabled = false;
     }
 }
 
