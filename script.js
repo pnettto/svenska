@@ -16,6 +16,11 @@ let azureSynthesizer = null;
 let currentWord = null;
 let useAzureSpeech = false;
 let translationRevealed = false;
+let wordHistory = [];
+let historyIndex = -1;
+let shuffledWords = [];
+let shuffledIndex = 0;
+let isGeneratingExamples = false;
 
 // Initialize Azure Speech Synthesizer
 function initializeSpeech() {
@@ -118,6 +123,16 @@ function parseCSV(csvText) {
     return words;
 }
 
+// Shuffle array using Fisher-Yates algorithm
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 // Get a random word from the array
 function getRandomWord(words) {
     return words[Math.floor(Math.random() * words.length)];
@@ -164,7 +179,7 @@ function getWordCount(swedishWord) {
 }
 
 // Display a word on the page
-function displayWord(word) {
+function displayWord(word, addToHistory = true) {
     currentWord = word;
     translationRevealed = false;
     document.getElementById('swedishWord').textContent = word.swedish;
@@ -172,20 +187,61 @@ function displayWord(word) {
     translationElement.textContent = word.english;
     translationElement.classList.add('hidden');
     
-    // Reset examples section
-    document.getElementById('examplesContainer').classList.add('hidden');
+    // Clear examples section initially
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('generateBtn').disabled = false;
     
-    // Increment the counter for this word
-    incrementWordCounter(word.swedish);
+    // Add to history if it's a new word
+    if (addToHistory) {
+        // Remove any words after current position if we're in the middle of history
+        if (historyIndex < wordHistory.length - 1) {
+            wordHistory = wordHistory.slice(0, historyIndex + 1);
+        }
+        wordHistory.push({ ...word, examples: null });
+        historyIndex = wordHistory.length - 1;
+        
+        // Increment the counter for this word
+        incrementWordCounter(word.swedish);
+        
+        // Hide examples for new words
+        document.getElementById('examplesContainer').classList.add('hidden');
+    } else {
+        // Navigating through history - restore examples if they exist
+        if (word.examples) {
+            displayExamples(word.examples);
+        } else {
+            document.getElementById('examplesContainer').classList.add('hidden');
+        }
+    }
+    
+    // Update button states
+    updateNavigationButtons();
+}
+
+// Update the state of navigation buttons
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    if (prevBtn) {
+        prevBtn.disabled = historyIndex <= 0;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = historyIndex >= wordHistory.length - 1;
+    }
 }
 
 function displayNewWord() {
-    const currentWords = localStorage.getItem(CACHE_KEY);
-    if (currentWords) {
-        const wordsArray = JSON.parse(currentWords);
-        displayWord(getRandomWord(wordsArray));
+    // Get next word from shuffled list
+    if (shuffledIndex < shuffledWords.length) {
+        displayWord(shuffledWords[shuffledIndex]);
+        shuffledIndex++;
+    } else {
+        // If we've gone through all words, reshuffle and start over
+        shuffledWords = shuffleArray(shuffledWords);
+        shuffledIndex = 0;
+        displayWord(shuffledWords[shuffledIndex]);
+        shuffledIndex++;
     }
 }
 
@@ -235,8 +291,12 @@ async function init() {
     if (cachedWords) {
         try {
             words = JSON.parse(cachedWords);
-            // Display a random word immediately from cache
-            displayWord(getRandomWord(words));
+            // Shuffle all words at initialization
+            shuffledWords = shuffleArray(words);
+            shuffledIndex = 0;
+            // Display first word from shuffled list
+            displayWord(shuffledWords[shuffledIndex]);
+            shuffledIndex++;
         } catch (error) {
             console.error('Error parsing cached words:', error);
         }
@@ -248,11 +308,16 @@ async function init() {
     // If we didn't have cached words, display now
     if (!words && freshWords) {
         words = freshWords;
-        displayWord(getRandomWord(words));
+        shuffledWords = shuffleArray(words);
+        shuffledIndex = 0;
+        displayWord(shuffledWords[shuffledIndex]);
+        shuffledIndex++;
     }
     
     // Set up click handler for Swedish word to reveal translation
     document.getElementById('swedishWord').addEventListener('click', () => {
+        if (isGeneratingExamples) return; // Don't allow word change while generating
+        
         const translationElement = document.getElementById('englishTranslation');
         if (translationElement.classList.contains('hidden')) {
             translationElement.classList.remove('hidden')
@@ -281,6 +346,29 @@ async function init() {
     document.getElementById('generateBtn').addEventListener('click', async () => {
         if (currentWord) {
             await generateExamples(currentWord.swedish, currentWord.english);
+        }
+    });
+    
+    // Set up click handler for previous button
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        if (isGeneratingExamples) return; // Don't allow navigation while generating
+        
+        if (historyIndex > 0) {
+            historyIndex--;
+            displayWord(wordHistory[historyIndex], false);
+        }
+    });
+    
+    // Set up click handler for next button
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (isGeneratingExamples) return; // Don't allow navigation while generating
+        
+        if (historyIndex < wordHistory.length - 1) {
+            historyIndex++;
+            displayWord(wordHistory[historyIndex], false);
+        } else {
+            // If at the end of history, show a new random word
+            displayNewWord();
         }
     });
 }
@@ -322,9 +410,14 @@ async function generateExamples(swedishWord, englishTranslation) {
     const generateBtn = document.getElementById('generateBtn');
     const loading = document.getElementById('loading');
     const examplesContainer = document.getElementById('examplesContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
     
-    // Show loading state
+    // Show loading state and disable navigation
+    isGeneratingExamples = true;
     generateBtn.disabled = true;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
     loading.classList.remove('hidden');
     examplesContainer.classList.add('hidden');
     
@@ -351,6 +444,11 @@ async function generateExamples(swedishWord, englishTranslation) {
         // Save to cache
         saveExamplesToCache(swedishWord, examples);
         
+        // Save examples to current word in history
+        if (historyIndex >= 0 && historyIndex < wordHistory.length) {
+            wordHistory[historyIndex].examples = examples;
+        }
+        
         // Display examples
         displayExamples(examples);
         
@@ -358,8 +456,10 @@ async function generateExamples(swedishWord, englishTranslation) {
         console.error('Error generating examples:', error);
         alert(`Failed to generate examples: ${error.message}\n\nMake sure your proxy server is running.`);
     } finally {
+        isGeneratingExamples = false;
         loading.classList.add('hidden');
         generateBtn.disabled = false;
+        updateNavigationButtons();
     }
 }
 
