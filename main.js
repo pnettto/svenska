@@ -1,5 +1,5 @@
 import { html } from './htm.js';
-import { render } from './preact.module.js';
+import { render } from './libs/preact.module.js';
 import { useState, useEffect } from './hooks.js';
 import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal } from './components.js';
 import { storage } from './utils/storage.js';

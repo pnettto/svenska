@@ -1,2 +1,2 @@
 // Wrapper to re-export hooks with correct preact import path
-export * from './hooks.module.js';
+export * from './libs/hooks.module.js';
