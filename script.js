@@ -5,7 +5,7 @@ const EXAMPLES_CACHE_KEY = 'swedishExamples';
 const WORD_COUNTER_KEY = 'swedishWordCounter';
 
 // Use proxy server instead of direct API calls to protect API key on mobile
-const PROXY_API_URL = localStorage.getItem('PROXY_API_URL') || 'https://new-tab-svenska.onrender.com';
+const PROXY_API_URL = localStorage.getItem('PROXY_API_URL') || 'https://svenska-new-tab-backend.fly.dev';
 
 let currentWord = null;
 let audioCache = {}; // Cache for audio blobs
