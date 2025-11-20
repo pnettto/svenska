@@ -104,7 +104,7 @@ function App() {
       setTranslationRevealed(true);
       audio.playWord(currentWord, proxyUrl);
     } else {
-      displayNewWord();
+      setTranslationRevealed(false);
     }
   };
 
