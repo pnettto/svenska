@@ -10,12 +10,12 @@ export function WordCard({ word, onWordClick, translationRevealed }) {
         class="swedish-word" 
         onClick=${onWordClick}
       >
-        ${word.swedish}
+        ${word.original}
       </h1>
       <p 
         class="english-translation ${translationRevealed ? '' : 'hidden'}"
       >
-        ${word.english}
+        ${word.translation}
       </p>
     </div>
   `;

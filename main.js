@@ -4,7 +4,7 @@ import { useState, useEffect } from './hooks.js';
 import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal } from './components.js';
 import { storage } from './utils/storage.js';
 import { audio } from './utils/audio.js';
-import { csv } from './utils/csv.js';
+import { api } from './utils/api.js';
 
 function App() {
   const [currentWord, setCurrentWord] = useState(null);
@@ -30,20 +30,20 @@ function App() {
     // Try to get cached words first
     const cachedWords = storage.getCachedWords();
     if (cachedWords) {
-      const shuffled = csv.shuffle(cachedWords);
+      const shuffled = api.shuffle(cachedWords);
       setShuffledWords(shuffled);
       setShuffledIndex(0);
       displayWord(shuffled[0]);
       setShuffledIndex(1);
     }
 
-    // Fetch fresh words in background
-    csv.fetch().then(freshWords => {
+    // Fetch fresh words from API in background
+    api.getAllWords().then(freshWords => {
       if (freshWords) {
         storage.saveWords(freshWords);
         
         if (!cachedWords) {
-          const shuffled = csv.shuffle(freshWords);
+          const shuffled = api.shuffle(freshWords);
           setShuffledWords(shuffled);
           setShuffledIndex(0);
           displayWord(shuffled[0]);
@@ -64,18 +64,24 @@ function App() {
         const newHistory = historyIndex < prev.length - 1 
           ? prev.slice(0, historyIndex + 1) 
           : prev;
-        return [...newHistory, { ...word, examples: null }];
+        return [...newHistory, { ...word, examples: word.examples || [] }];
       });
       setHistoryIndex(prev => prev + 1);
-      storage.incrementWordCounter(word.swedish);
+      
+      // Increment read count via API
+      if (word.id) {
+        api.incrementReadCount(word.id).catch(error => {
+          console.warn('Failed to increment read count:', error);
+        });
+      }
     } else {
-      if (word.examples) {
+      if (word.examples && word.examples.length > 0) {
         setExamples(word.examples);
         setShowExamples(true);
       }
     }
 
-    audio.preload(word.swedish, proxyUrl);
+    audio.preload(word.original, proxyUrl);
   };
 
   const displayNewWord = () => {
@@ -83,7 +89,7 @@ function App() {
       displayWord(shuffledWords[shuffledIndex]);
       setShuffledIndex(prev => prev + 1);
     } else {
-      const reshuffled = csv.shuffle(shuffledWords);
+      const reshuffled = api.shuffle(shuffledWords);
       setShuffledWords(reshuffled);
       setShuffledIndex(0);
       displayWord(reshuffled[0]);
@@ -96,7 +102,7 @@ function App() {
 
     if (!translationRevealed) {
       setTranslationRevealed(true);
-      audio.play(currentWord.swedish, proxyUrl);
+      audio.play(currentWord.original, proxyUrl);
     } else {
       displayNewWord();
     }
@@ -104,7 +110,7 @@ function App() {
 
   const handlePlayAudio = () => {
     if (currentWord) {
-      audio.play(currentWord.swedish, proxyUrl);
+      audio.play(currentWord.original, proxyUrl);
     }
   };
 
@@ -119,8 +125,8 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          swedishWord: currentWord.swedish,
-          englishTranslation: currentWord.english
+          swedishWord: currentWord.original,
+          englishTranslation: currentWord.translation
         })
       });
 
@@ -132,7 +138,15 @@ function App() {
       const data = await response.json();
       setExamples(data.examples);
 
-      storage.saveExamples(currentWord.swedish, data.examples);
+      // Update word in API with examples
+      if (currentWord.id) {
+        await api.updateWord(
+          currentWord.id,
+          currentWord.original,
+          currentWord.translation,
+          data.examples
+        );
+      }
       
       setWordHistory(prev => {
         const newHistory = [...prev];
@@ -204,20 +218,25 @@ function App() {
       }
 
       const data = await response.json();
-      const customWord = { swedish, english: data.translation };
+      
+      // Create word in API
+      const newWord = await api.createWord(swedish, data.translation, []);
+      if (!newWord) {
+        throw new Error('Failed to create word in database');
+      }
 
       setShuffledWords(prev => {
         const newWords = [...prev];
         if (newWords.length > 0) {
-          newWords.splice(shuffledIndex, 0, customWord);
+          newWords.splice(shuffledIndex, 0, newWord);
         } else {
-          newWords.push(customWord);
+          newWords.push(newWord);
         }
         return newWords;
       });
 
       setModalOpen(false);
-      displayWord(customWord);
+      displayWord(newWord);
       setShuffledIndex(prev => prev + 1);
 
     } catch (error) {
