@@ -5,6 +5,8 @@ import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal } from './compo
 import { storage } from './utils/storage.js';
 import { audio } from './utils/audio.js';
 import { api } from './utils/api.js';
+import { examples as examplesService } from './utils/examples.js';
+import { words } from './utils/words.js';
 
 function App() {
   const [currentWord, setCurrentWord] = useState(null);
@@ -22,33 +24,21 @@ function App() {
 
   // Initialize app
   useEffect(() => {
-    // Wake up proxy server (non-blocking)
-    fetch(`${proxyUrl}/health`).catch(error => {
-      console.warn('Failed to wake up proxy server:', error);
+    words.initialize(proxyUrl, storage).then(initialWords => {
+      if (initialWords) {
+        setShuffledWords(initialWords);
+        setShuffledIndex(0);
+        displayWord(initialWords[0]);
+        setShuffledIndex(1);
+      }
     });
 
-    // Try to get cached words first
-    const cachedWords = storage.getCachedWords();
-    if (cachedWords) {
-      const shuffled = api.shuffle(cachedWords);
-      setShuffledWords(shuffled);
-      setShuffledIndex(0);
-      displayWord(shuffled[0]);
-      setShuffledIndex(1);
-    }
-
-    // Fetch fresh words from API in background
+    // Fetch fresh words in background
     api.getAllWords().then(freshWords => {
       if (freshWords) {
         storage.saveWords(freshWords);
-        
-        if (!cachedWords) {
-          const shuffled = api.shuffle(freshWords);
-          setShuffledWords(shuffled);
-          setShuffledIndex(0);
-          displayWord(shuffled[0]);
-          setShuffledIndex(1);
-        }
+        const shuffled = api.shuffle(freshWords);
+        setShuffledWords(shuffled);
       }
     });
   }, []);
@@ -114,25 +104,6 @@ function App() {
     }
   };
 
-  const fetchNewExamples = async (existingExamples = []) => {
-    const response = await fetch(`${proxyUrl}/api/generate-examples`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        swedishWord: currentWord.original,
-        englishTranslation: currentWord.translation,
-        ...(existingExamples.length > 0 && { existingExamples })
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server error: ${response.status}`);
-    }
-
-    return await response.json();
-  };
-
   const updateExamplesInHistory = (newExamples) => {
     setWordHistory(prev => {
       const newHistory = [...prev];
@@ -143,12 +114,6 @@ function App() {
     });
   };
 
-  const preloadExampleAudio = (examplesList) => {
-    examplesList.forEach(example => {
-      audio.preload(example.swedish, proxyUrl);
-    });
-  };
-
   const handleGenerateExamples = async () => {
     if (!currentWord || isGeneratingExamples) return;
 
@@ -156,7 +121,7 @@ function App() {
     if (!showExamples && currentWord.examples?.length > 0) {
       setExamples(currentWord.examples);
       setShowExamples(true);
-      preloadExampleAudio(currentWord.examples);
+      examplesService.preloadAudio(currentWord.examples, proxyUrl);
       return;
     }
 
@@ -165,7 +130,12 @@ function App() {
     if (!showExamples) setShowExamples(false);
 
     try {
-      const data = await fetchNewExamples(examples);
+      const data = await examplesService.fetch(
+        proxyUrl,
+        currentWord.original,
+        currentWord.translation,
+        showExamples ? examples : []
+      );
       const updatedExamples = showExamples ? [...data.examples, ...examples] : data.examples;
       
       setExamples(updatedExamples);
@@ -180,7 +150,7 @@ function App() {
       }
       
       updateExamplesInHistory(updatedExamples);
-      preloadExampleAudio(data.examples);
+      examplesService.preloadAudio(data.examples, proxyUrl);
       setShowExamples(true);
 
     } catch (error) {
@@ -224,24 +194,9 @@ function App() {
     setIsTranslating(true);
 
     try {
-      const response = await fetch(`${proxyUrl}/api/translate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: swedish,
-          sourceLang: 'sv',
-          targetLang: 'en'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Translation API error: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const translation = await words.translate(proxyUrl, swedish);
+      const newWord = await api.createWord(swedish, translation, []);
       
-      // Create word in API
-      const newWord = await api.createWord(swedish, data.translation, []);
       if (!newWord) {
         throw new Error('Failed to create word in database');
       }

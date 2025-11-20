@@ -76,6 +76,10 @@ export function ExamplesSection({
 }) {
   return html`
     <div class="examples-section">
+      ${isGeneratingExamples && html`
+        <div class="loading">Generera exempel...</div>
+      `}
+
       ${showExamples && html`
         <div class="examples-container">
           <h3>Exampelmeningar:</h3>
@@ -97,10 +101,6 @@ export function ExamplesSection({
             `)}
           </div>
         </div>
-      `}
-      
-      ${isGeneratingExamples && html`
-        <div class="loading">Generera exempel...</div>
       `}
     </div>
   `;
