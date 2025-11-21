@@ -24,29 +24,24 @@ function App() {
 
   // Initialize app
   useEffect(() => {
-    // Try to get cached words first for immediate display
-    const cachedWords = storage.getCachedWords();
-    if (cachedWords && cachedWords.length > 0) {
-      const shuffled = api.shuffle(cachedWords);
+    const initializeWords = (words) => {
+      const shuffled = api.shuffle(words);
       setShuffledWords(shuffled);
-      setShuffledIndex(0);
       displayWord(shuffled[0]);
       setShuffledIndex(1);
+    };
+
+    // Try cached words first
+    const cachedWords = storage.getCachedWords();
+    if (cachedWords?.length > 0) {
+      initializeWords(cachedWords);
     }
 
-    // Fetch fresh words in background and update if we got new ones
+    // Fetch fresh words in background
     api.getAllWords().then(freshWords => {
-      if (freshWords && freshWords.length > 0) {
+      if (freshWords?.length > 0) {
         storage.saveWords(freshWords);
-        
-        // Only update if we didn't have cached words initially
-        if (!cachedWords || cachedWords.length === 0) {
-          const shuffled = api.shuffle(freshWords);
-          setShuffledWords(shuffled);
-          setShuffledIndex(0);
-          displayWord(shuffled[0]);
-          setShuffledIndex(1);
-        }
+        if (!cachedWords?.length) initializeWords(freshWords);
       }
     });
   }, []);
@@ -58,29 +53,21 @@ function App() {
     setExamples([]);
 
     if (addToHistory) {
-      setWordHistory(prev => {
-        const newHistory = historyIndex < prev.length - 1 
-          ? prev.slice(0, historyIndex + 1) 
-          : prev;
-        return [...newHistory, { ...word, examples: word.examples || [] }];
-      });
+      setWordHistory(prev => [
+        ...(historyIndex < prev.length - 1 ? prev.slice(0, historyIndex + 1) : prev),
+        { ...word, examples: word.examples || [] }
+      ]);
       setHistoryIndex(prev => prev + 1);
       
-      // Increment read count via API
       if (word._id) {
-        api.incrementReadCount(word._id).catch(error => {
-          console.warn('Failed to increment read count:', error);
-        });
+        api.incrementReadCount(word._id).catch(() => {});
       }
-    } else {
-      if (word.examples && word.examples.length > 0) {
-        setExamples(word.examples);
-        setShowExamples(true);
-        examplesService.preloadAudio(word.examples, proxyUrl);
-      }
+    } else if (word.examples?.length > 0) {
+      setExamples(word.examples);
+      setShowExamples(true);
+      examplesService.preloadAudio(word.examples, proxyUrl);
     }
 
-    // Preload audio for the word using speech caching
     audio.preloadWord(word, proxyUrl);
   };
 
@@ -135,9 +122,7 @@ function App() {
       return;
     }
 
-    // Generate new examples
     setIsGeneratingExamples(true);
-    if (!showExamples) setShowExamples(false);
 
     try {
       const data = await examplesService.fetch(
@@ -145,28 +130,22 @@ function App() {
         currentWord.original,
         currentWord.translation,
         showExamples ? examples : [],
-        currentWord.id || currentWord._id
+        currentWord._id
       );
       const updatedExamples = showExamples ? [...data.examples, ...examples] : data.examples;
       
       setExamples(updatedExamples);
+      setShowExamples(true);
       
-      if (currentWord.id || currentWord._id) {
-        await api.updateWord(
-          currentWord.id || currentWord._id,
-          currentWord.original,
-          currentWord.translation,
-          updatedExamples
-        );
+      if (currentWord._id) {
+        await api.updateWord(currentWord._id, currentWord.original, currentWord.translation, updatedExamples);
       }
       
       updateExamplesInHistory(updatedExamples);
       examplesService.preloadAudio(data.examples, proxyUrl);
-      setShowExamples(true);
 
     } catch (error) {
-      console.error('Error generating examples:', error);
-      alert(`Failed to generate examples: ${error.message}\n\nMake sure your proxy server is running.`);
+      alert(`Failed to generate examples: ${error.message}`);
     } finally {
       setIsGeneratingExamples(false);
     }
@@ -207,19 +186,12 @@ function App() {
     try {
       const translation = await words.translate(proxyUrl, swedish);
       const newWord = await api.createWord(swedish, translation, []);
-      
-      if (!newWord) {
-        throw new Error('Failed to create word in database');
-      }
+      if (!newWord) throw new Error('Failed to create word');
 
       setShuffledWords(prev => {
-        const newWords = [...prev];
-        if (newWords.length > 0) {
-          newWords.splice(shuffledIndex, 0, newWord);
-        } else {
-          newWords.push(newWord);
-        }
-        return newWords;
+        const words = [...prev];
+        words.splice(shuffledIndex, 0, newWord);
+        return words;
       });
 
       setModalOpen(false);
@@ -227,8 +199,7 @@ function App() {
       setShuffledIndex(prev => prev + 1);
 
     } catch (error) {
-      console.error('Error translating word:', error);
-      alert('Kunde inte hämta översättning / Failed to fetch translation. Make sure your proxy server is running.');
+      alert('Kunde inte hämta översättning / Failed to fetch translation');
     } finally {
       setIsTranslating(false);
     }

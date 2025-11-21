@@ -12,18 +12,14 @@ export const audio = {
                 body: JSON.stringify({ text })
             });
             
-            if (!response.ok) {
-                throw new Error(`TTS API error: ${response.status}`);
-            }
+            if (!response.ok) throw new Error('TTS failed');
             
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             const speechFile = response.headers.get('X-Speech-File');
             
             // Cache the audio
-            if (speechFile) {
-                this.cache[speechFile] = audioUrl;
-            }
+            if (speechFile) this.cache[speechFile] = audioUrl;
             this.cache[text] = audioUrl;
             
             return { audioUrl, speechFile };
@@ -35,106 +31,66 @@ export const audio = {
 
     // Get audio URL (from cache or speech endpoint)
     getAudioUrl(speechFilename, proxyUrl) {
-        if (this.cache[speechFilename]) {
-            return this.cache[speechFilename];
-        }
+        if (this.cache[speechFilename]) return this.cache[speechFilename];
         
         const audioUrl = `${proxyUrl}/api/speech/${speechFilename}`;
         this.cache[speechFilename] = audioUrl;
         return audioUrl;
     },
 
-    // Preload audio for a word
-    async preloadWord(word, proxyUrl) {
-        const cacheKey = word.speech || word.original;
-        
-        if (this.cache[cacheKey]) {
-            return;
-        }
+    // Preload audio helper
+    async preloadAudio(speechFilename, text, proxyUrl) {
+        const cacheKey = speechFilename || text;
+        if (this.cache[cacheKey]) return;
         
         try {
-            if (word.speech) {
-                // Use cached audio from speech endpoint
-                this.getAudioUrl(word.speech, proxyUrl);
+            if (speechFilename) {
+                this.getAudioUrl(speechFilename, proxyUrl);
             } else {
-                // Generate new audio
-                await this.generateAudio(word.original, proxyUrl);
+                await this.generateAudio(text, proxyUrl);
             }
         } catch (error) {
-            console.error('Error preloading word audio:', error);
+            console.error('Error preloading audio:', error);
         }
+    },
+
+    // Preload audio for a word
+    async preloadWord(word, proxyUrl) {
+        await this.preloadAudio(word.speech, word.original, proxyUrl);
     },
 
     // Preload audio for an example
     async preloadExample(example, proxyUrl) {
-        const cacheKey = example.speech || example.swedish;
-        
-        if (this.cache[cacheKey]) {
-            return;
+        await this.preloadAudio(example.speech, example.swedish, proxyUrl);
+    },
+
+    // Play audio helper
+    async play(speechFilename, text, proxyUrl) {
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
         }
         
         try {
-            if (example.speech) {
-                // Use cached audio from speech endpoint
-                this.getAudioUrl(example.speech, proxyUrl);
-            } else {
-                // Generate new audio
-                await this.generateAudio(example.swedish, proxyUrl);
-            }
+            const audioUrl = speechFilename 
+                ? this.getAudioUrl(speechFilename, proxyUrl)
+                : (await this.generateAudio(text, proxyUrl)).audioUrl;
+            
+            this.currentAudio = new Audio(audioUrl);
+            await this.currentAudio.play();
         } catch (error) {
-            console.error('Error preloading example audio:', error);
+            console.error('Error playing audio:', error);
+            alert('Failed to play audio. Make sure your proxy server is running.');
         }
     },
 
     // Play audio for a word
     async playWord(word, proxyUrl) {
-        if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio.currentTime = 0;
-        }
-        
-        try {
-            let audioUrl;
-            
-            if (word.speech) {
-                audioUrl = this.getAudioUrl(word.speech, proxyUrl);
-            } else {
-                const result = await this.generateAudio(word.original, proxyUrl);
-                audioUrl = result.audioUrl;
-            }
-            
-            this.currentAudio = new Audio(audioUrl);
-            await this.currentAudio.play();
-            
-        } catch (error) {
-            console.error('Error playing word audio:', error);
-            alert('Failed to play audio. Make sure your proxy server is running.');
-        }
+        await this.play(word.speech, word.original, proxyUrl);
     },
 
     // Play audio for an example
     async playExample(example, word, exampleIndex, proxyUrl) {
-        if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio.currentTime = 0;
-        }
-        
-        try {
-            let audioUrl;
-            
-            if (example.speech) {
-                audioUrl = this.getAudioUrl(example.speech, proxyUrl);
-            } else {
-                const result = await this.generateAudio(example.swedish, proxyUrl);
-                audioUrl = result.audioUrl;
-            }
-            
-            this.currentAudio = new Audio(audioUrl);
-            await this.currentAudio.play();
-            
-        } catch (error) {
-            console.error('Error playing example audio:', error);
-            alert('Failed to play example audio. Make sure your proxy server is running.');
-        }
+        await this.play(example.speech, example.swedish, proxyUrl);
     }
 };

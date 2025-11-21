@@ -2,117 +2,64 @@
 export const api = {
     BASE_URL: localStorage.getItem('apiBaseUrl') || 'https://svenska-new-tab-backend.fly.dev',
 
-    // Get all words
-    async getAllWords() {
+    // Helper for making API requests
+    async request(endpoint, options = {}) {
         try {
-            const response = await fetch(`${this.BASE_URL}/api/words`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch words: ${response.status}`);
-            }
-            const data = await response.json();
-            return data.words;
+            const response = await fetch(`${this.BASE_URL}${endpoint}`, options);
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            return options.method === 'DELETE' ? true : await response.json();
         } catch (error) {
-            console.error('Error fetching words:', error);
+            console.error(`Error with ${endpoint}:`, error);
             return null;
         }
+    },
+
+    // Get all words
+    async getAllWords() {
+        const data = await this.request('/api/words');
+        return data?.words;
     },
 
     // Get single word by ID
     async getWord(id) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/words/${id}`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch word: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching word:', error);
-            return null;
-        }
+        return await this.request(`/api/words/${id}`);
     },
 
     // Create new word
     async createWord(original, translation, examples = []) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/words`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ original, translation, examples })
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to create word: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error creating word:', error);
-            return null;
-        }
+        return await this.request('/api/words', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ original, translation, examples })
+        });
     },
 
     // Update word
     async updateWord(id, original, translation, examples = []) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/words/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ original, translation, examples })
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to update word: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error updating word:', error);
-            return null;
-        }
+        return await this.request(`/api/words/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ original, translation, examples })
+        });
     },
 
     // Delete word
     async deleteWord(id) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/words/${id}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to delete word: ${response.status}`);
-            }
-            return true;
-        } catch (error) {
-            console.error('Error deleting word:', error);
-            return false;
-        }
+        return await this.request(`/api/words/${id}`, { method: 'DELETE' });
     },
 
     // Increment read count
     async incrementReadCount(id) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/words/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ incrementReadCount: true })
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to increment read count: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error incrementing read count:', error);
-            return null;
-        }
+        return await this.request(`/api/words/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ incrementReadCount: true })
+        });
     },
 
     // Get statistics
     async getStats() {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/stats`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch stats: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching stats:', error);
-            return null;
-        }
+        return await this.request('/api/stats');
     },
 
     // Generate speech for text and get audio blob
@@ -124,16 +71,13 @@ export const api = {
                 body: JSON.stringify({ text })
             });
             
-            if (!response.ok) {
-                throw new Error(`TTS API error: ${response.status}`);
-            }
+            if (!response.ok) return null;
             
-            const audioBlob = await response.blob();
-            const speechFile = response.headers.get('X-Speech-File');
-            
-            return { audioBlob, speechFile };
+            return {
+                audioBlob: await response.blob(),
+                speechFile: response.headers.get('X-Speech-File')
+            };
         } catch (error) {
-            console.error('Error generating speech:', error);
             return null;
         }
     },
