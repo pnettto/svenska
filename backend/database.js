@@ -23,14 +23,7 @@ const dbOperations = {
     
     // Get a single word by ID
     getWordById: async (id) => {
-        const word = await db.findOne({ _id: id });
-        return word;
-    },
-    
-    // Get a single word by original text
-    getWordByOriginal: async (original) => {
-        const word = await db.findOne({ original });
-        return word;
+        return await db.findOne({ _id: id });
     },
     
     // Create a new word
@@ -40,51 +33,27 @@ const dbOperations = {
             throw new Error('Word already exists');
         }
         
-        const newWord = {
+        return await db.insert({
             original,
             translation,
             examples,
             read_count: 0,
             speech
-        };
-        
-        const inserted = await db.insert(newWord);
-        return inserted;
+        });
     },
     
     // Update an existing word
     updateWord: async (id, original, translation, examples, speech = null) => {
         const numAffected = await db.update(
             { _id: id },
-            { 
-                $set: { 
-                    original, 
-                    translation, 
-                    examples, 
-                    speech 
-                } 
-            }
+            { $set: { original, translation, examples, speech } }
         );
         
         if (numAffected === 0) {
             throw new Error('Word not found');
         }
         
-        return dbOperations.getWordById(id);
-    },
-    
-    // Update only the speech field for a word
-    updateWordSpeech: async (id, speechFilename) => {
-        const numAffected = await db.update(
-            { _id: id },
-            { $set: { speech: speechFilename } }
-        );
-        
-        if (numAffected === 0) {
-            throw new Error('Word not found');
-        }
-        
-        return dbOperations.getWordById(id);
+        return await db.findOne({ _id: id });
     },
     
     // Delete a word
@@ -104,21 +73,19 @@ const dbOperations = {
             throw new Error('Word not found');
         }
         
-        return dbOperations.getWordById(id);
+        return await db.findOne({ _id: id });
     },
     
     // Get total word count
     getWordCount: async () => {
-        const count = await db.count({});
-        return count;
+        return await db.count({});
     },
     
     // Get most viewed words by read count
     getMostViewedWords: async (limit = 10) => {
-        const words = await db.find({})
+        return await db.find({})
             .sort({ read_count: -1 })
             .limit(limit);
-        return words;
     },
     
     // Import words from CSV data

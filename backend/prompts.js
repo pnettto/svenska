@@ -4,29 +4,23 @@
 
 const prompts = {
     exampleGeneration: {
-        system: 'You are a Swedish language teacher helping students learn Swedish. Generate simple, practical example sentences that demonstrate how to use Swedish words in everyday contexts. Each example should be at A2-B1 level (beginner to intermediate).',
+        system: 'You are a Swedish language teacher. Generate simple, practical example sentences at A2-B1 level (beginner to intermediate) that demonstrate how to use Swedish words in everyday contexts.',
         
         user: (swedishWord, englishTranslation, existingExamples) => {
-            let prompt = `Generate 3 example sentences using the Swedish word "${swedishWord}" (which means "${englishTranslation}" in English).`;
+            let prompt = `Generate 3 example sentences using the Swedish word "${swedishWord}" (meaning "${englishTranslation}").`;
             
-            if (existingExamples && existingExamples.length > 0) {
-                prompt += `\n\nIMPORTANT: The following examples ALREADY EXIST. You must generate NEW and DIFFERENT examples that are NOT similar to these:\n`;
-                existingExamples.forEach((example, index) => {
-                    prompt += `${index + 1}. ${example.swedish}\n`;
-                });
-                prompt += `\nYour new examples must:\n- Use DIFFERENT contexts (e.g., if existing examples are about work, use home, travel, hobbies, etc.)\n- Use DIFFERENT sentence structures (e.g., questions, commands, compound sentences)\n- Vary in complexity level (mix of simpler A2 and more complex B1 sentences)\n- Demonstrate different grammatical uses of the word\n- Be creative and avoid any similarity to the existing examples above`;
+            if (existingExamples?.length > 0) {
+                prompt += `\n\nThese examples ALREADY EXIST - generate NEW and DIFFERENT ones:\n${existingExamples.map((ex, i) => `${i + 1}. ${ex.swedish}`).join('\n')}`;
+                prompt += `\n\nYour new examples must use different contexts, sentence structures, and complexity levels.`;
             }
             
-            prompt += `\n\nFor each example, provide:\n1. The Swedish sentence\n2. The English translation\n\nFormat your response as a JSON array with objects containing "swedish" and "english" properties. Example format:\n[{"swedish": "...", "english": "..."}, {"swedish": "...", "english": "..."}, {"swedish": "...", "english": "..."}]\n\nMake the sentences natural, practical, and at beginner-intermediate level.`;
-            
-            return prompt;
+            return prompt + `\n\nReturn a JSON array: [{"swedish": "...", "english": "..."}, ...]\nMake sentences natural and practical.`;
         }
     },
     
     translation: {
-        system: 'You are a professional translator. Translate the given text accurately and concisely. Return ONLY the translated text without any explanations, notes, or additional context.',
-        
-        user: (text, sourceLang, targetLang) => `Translate the following text from ${sourceLang} to ${targetLang}:\n\n${text}`
+        system: 'You are a professional translator. Return ONLY the translated text without explanations or notes.',
+        user: (text, sourceLang, targetLang) => `Translate from ${sourceLang} to ${targetLang}:\n\n${text}`
     }
 };
 
