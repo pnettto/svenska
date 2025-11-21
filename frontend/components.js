@@ -110,7 +110,9 @@ export function CustomWordModal({
   isOpen, 
   onClose, 
   onSubmit,
-  isTranslating 
+  isTranslating,
+  onGenerateRandom,
+  isGeneratingRandom
 }) {
   const inputRef = useRef();
   const [customSwedish, setCustomSwedish] = useState('');
@@ -137,6 +139,13 @@ export function CustomWordModal({
     onClose();
   };
 
+  const handleGenerateRandom = async () => {
+    const result = await onGenerateRandom();
+    if (result) {
+      setCustomSwedish(result.swedish);
+    }
+  };
+
   if (!isOpen) return null;
 
   return html`
@@ -152,22 +161,30 @@ export function CustomWordModal({
             value=${customSwedish}
             onInput=${(e) => setCustomSwedish(e.target.value)}
             onKeyDown=${handleKeyDown}
-            disabled=${isTranslating}
+            disabled=${isTranslating || isGeneratingRandom}
             placeholder="t.ex. hund"
           />
+          <button 
+            class="btn-ai" 
+            onClick=${handleGenerateRandom}
+            disabled=${isTranslating || isGeneratingRandom}
+            title="Generera slumpmässigt ord med AI"
+          >
+            ${isGeneratingRandom ? '✨ Genererar...' : '✨ AI slumpord'}
+          </button>
         </div>
         <div class="modal-buttons">
           <button 
             class="btn-secondary" 
             onClick=${handleClose}
-            disabled=${isTranslating}
+            disabled=${isTranslating || isGeneratingRandom}
           >
             Avbryt
           </button>
           <button 
             class="btn-primary" 
             onClick=${handleSubmit}
-            disabled=${isTranslating}
+            disabled=${isTranslating || isGeneratingRandom}
           >
             Lägg till
           </button>

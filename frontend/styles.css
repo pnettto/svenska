@@ -97,6 +97,9 @@ body {
 .input-group {
     margin-bottom: 20px;
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .input-group label {
@@ -120,6 +123,30 @@ body {
 .input-group input:focus {
     outline: none;
     border-color: #808080;
+}
+
+.btn-ai {
+    padding: 10px 20px;
+    border: 2px solid #6a5acd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #6a5acd 0%, #9370db 100%);
+    color: #fff;
+    align-self: flex-start;
+}
+
+.btn-ai:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(106, 90, 205, 0.4);
+    background: linear-gradient(135deg, #7b68ee 0%, #9370db 100%);
+}
+
+.btn-ai:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .modal-buttons {

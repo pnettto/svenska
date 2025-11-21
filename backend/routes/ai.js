@@ -80,4 +80,29 @@ router.post('/translate', async (req, res) => {
     }
 });
 
+// POST /generate-random-word - Generate a random Swedish word using OpenAI
+router.post('/generate-random-word', async (req, res) => {
+    if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+    
+    try {
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: prompts.randomWord.system },
+                { role: 'user', content: prompts.randomWord.user() }
+            ],
+            temperature: 0.8,
+            max_tokens: 100,
+            response_format: { type: "json_object" }
+        });
+        
+        const result = JSON.parse(completion.choices[0].message.content);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to generate random word' });
+    }
+});
+
 module.exports = router;

@@ -87,6 +87,22 @@ export const api = {
         return `${this.BASE_URL}/api/speech/${filename}`;
     },
 
+    // Generate random Swedish word with AI
+    async generateRandomWord() {
+        try {
+            const response = await fetch(`${this.BASE_URL}/api/generate-random-word`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (!response.ok) return null;
+            return await response.json();
+        } catch (error) {
+            console.error('Error generating random word:', error);
+            return null;
+        }
+    },
+
     // Shuffle array using Fisher-Yates algorithm
     shuffle(array) {
         const shuffled = [...array];

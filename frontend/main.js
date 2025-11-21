@@ -20,6 +20,7 @@ function App() {
   const [showExamples, setShowExamples] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingRandom, setIsGeneratingRandom] = useState(false);
   const proxyUrl = storage.getProxyUrl();
 
   // Initialize app
@@ -175,6 +176,23 @@ function App() {
     audio.playExample(example, currentWord, exampleIndex, proxyUrl);
   };
 
+  const handleGenerateRandomWord = async () => {
+    setIsGeneratingRandom(true);
+    
+    try {
+      const result = await api.generateRandomWord();
+      if (!result) {
+        throw new Error('Failed to generate random word');
+      }
+      return result;
+    } catch (error) {
+      alert('Kunde inte generera slumpord / Failed to generate random word');
+      return null;
+    } finally {
+      setIsGeneratingRandom(false);
+    }
+  };
+
   const handleSubmitCustomWord = async (swedish) => {
     if (!swedish.trim()) {
       alert('Vänligen fyll i ett svenskt ord / Please enter a Swedish word');
@@ -222,6 +240,8 @@ function App() {
         onClose=${() => setModalOpen(false)}
         onSubmit=${handleSubmitCustomWord}
         isTranslating=${isTranslating}
+        onGenerateRandom=${handleGenerateRandomWord}
+        isGeneratingRandom=${isGeneratingRandom}
       />
       
       <div class="container">

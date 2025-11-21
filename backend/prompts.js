@@ -21,6 +21,19 @@ const prompts = {
     translation: {
         system: 'You are a professional translator. Return ONLY the translated text without explanations or notes.',
         user: (text, sourceLang, targetLang) => `Translate from ${sourceLang} to ${targetLang}:\n\n${text}`
+    },
+    
+    randomWord: {
+        system: 'You are a Swedish language teacher with a vast vocabulary. Generate diverse, unpredictable Swedish words or expressions for intermediate learners. Vary between different word types, topics, and difficulty levels. Never repeat recent words.',
+        user: () => {
+            const categories = ['food', 'nature', 'emotions', 'actions', 'objects', 'time', 'people', 'places', 'qualities', 'weather', 'body', 'colors', 'animals', 'transportation', 'home', 'work', 'hobbies', 'relationships'];
+            const wordTypes = ['noun', 'verb', 'adjective', 'adverb', 'expression'];
+            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+            const randomType = wordTypes[Math.floor(Math.random() * wordTypes.length)];
+            const timestamp = Date.now();
+            
+            return `Generate ONE random Swedish ${randomType} related to "${randomCategory}". Make it practical and useful. Seed: ${timestamp}. Return as JSON: {"swedish": "...", "english": "..."}`;
+        }
     }
 };
 
