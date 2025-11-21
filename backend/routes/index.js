@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 // Import route modules
-const wordsRoutes = require('./routes/words');
-const aiRoutes = require('./routes/ai');
-const speechRoutes = require('./routes/speech');
-const utilsRoutes = require('./routes/utils');
+const wordsRoutes = require('./words');
+const aiRoutes = require('./ai');
+const speechRoutes = require('./speech');
+const utilsRoutes = require('./utils');
 
 // Mount routes
 router.use('/words', wordsRoutes);
