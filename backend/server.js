@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const dataRouter = require('./routes/data-routes');
-const llmRouter = require('./routes/llm-routes');
+const router = require('./routes');
 require('dotenv').config();
 
 const app = express();
@@ -11,11 +10,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Mount word management routes
-app.use('/api', dataRouter);
-
-// Mount LLM routes
-app.use('/api', llmRouter);
+// Mount all API routes
+app.use('/api', router);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -37,11 +37,7 @@ export const api = {
             const response = await fetch(`${this.BASE_URL}/api/words`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    original,
-                    translation,
-                    examples
-                })
+                body: JSON.stringify({ original, translation, examples })
             });
             if (!response.ok) {
                 throw new Error(`Failed to create word: ${response.status}`);
@@ -59,11 +55,7 @@ export const api = {
             const response = await fetch(`${this.BASE_URL}/api/words/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    original,
-                    translation,
-                    examples
-                })
+                body: JSON.stringify({ original, translation, examples })
             });
             if (!response.ok) {
                 throw new Error(`Failed to update word: ${response.status}`);
@@ -94,8 +86,10 @@ export const api = {
     // Increment read count
     async incrementReadCount(id) {
         try {
-            const response = await fetch(`${this.BASE_URL}/api/words/${id}/increment-read`, {
-                method: 'POST'
+            const response = await fetch(`${this.BASE_URL}/api/words/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ incrementReadCount: true })
             });
             if (!response.ok) {
                 throw new Error(`Failed to increment read count: ${response.status}`);
@@ -121,26 +115,13 @@ export const api = {
         }
     },
 
-    // Shuffle array using Fisher-Yates algorithm
-    shuffle(array) {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    },
-
-    // Generate speech for a word and cache it
-    async generateWordSpeech(text, wordId) {
+    // Generate speech for text and get audio blob
+    async generateSpeech(text) {
         try {
             const response = await fetch(`${this.BASE_URL}/api/tts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    text,
-                    ...(wordId && { wordId })
-                })
+                body: JSON.stringify({ text })
             });
             
             if (!response.ok) {
@@ -150,42 +131,25 @@ export const api = {
             const audioBlob = await response.blob();
             const speechFile = response.headers.get('X-Speech-File');
             
-            return {
-                audioBlob,
-                speechFile
-            };
+            return { audioBlob, speechFile };
         } catch (error) {
-            console.error('Error generating word speech:', error);
+            console.error('Error generating speech:', error);
             return null;
         }
     },
 
-    // Get cached audio by filename
+    // Get cached audio URL by filename
     getSpeechUrl(filename) {
         return `${this.BASE_URL}/api/speech/${filename}`;
     },
 
-    // Generate speech for an example sentence
-    async generateExampleSpeech(wordId, exampleIndex, exampleText) {
-        try {
-            const response = await fetch(`${this.BASE_URL}/api/generate-example-speech`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    wordId,
-                    exampleIndex,
-                    exampleText
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to generate example speech: ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('Error generating example speech:', error);
-            return null;
+    // Shuffle array using Fisher-Yates algorithm
+    shuffle(array) {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
+        return shuffled;
     }
 };
