@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const sdk = require('microsoft-cognitiveservices-speech-sdk');
+const { PollyClient, SynthesizeSpeechCommand } = require('@aws-sdk/client-polly');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -15,7 +15,7 @@ if (!fs.existsSync(SPEECH_CACHE_DIR)) {
 }
 
 // Helper function to generate speech filename
-const generateSpeechFilename = (text, voiceName = 'sv-SE-SofieNeural') => {
+const generateSpeechFilename = (text, voiceName = 'Astrid') => {
     const hash = crypto
         .createHash('sha256')
         .update(`${text}_${voiceName}`)
@@ -23,17 +23,17 @@ const generateSpeechFilename = (text, voiceName = 'sv-SE-SofieNeural') => {
     return `${hash}.mp3`;
 };
 
-// POST /tts - Text-to-Speech using Azure Speech Service with caching
+// POST /tts - Text-to-Speech using Amazon Polly with caching
 router.post('/tts', async (req, res) => {
     const { text } = req.body;
     
     if (!text) return res.status(400).json({ error: 'Missing required field: text' });
-    if (!process.env.AZURE_SPEECH_KEY || !process.env.AZURE_SPEECH_REGION) {
-        return res.status(500).json({ error: 'Azure Speech credentials not configured' });
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+        return res.status(500).json({ error: 'AWS credentials not configured' });
     }
     
     try {
-        const voiceName = 'sv-SE-SofieNeural';
+        const voiceName = 'Astrid'; // Swedish female voice in Polly (standard engine)
         const cacheFilename = generateSpeechFilename(text, voiceName);
         const cacheFilePath = path.join(SPEECH_CACHE_DIR, cacheFilename);
         
@@ -46,40 +46,42 @@ router.post('/tts', async (req, res) => {
             return res.send(audioBuffer);
         }
         
-        // Generate speech via Azure
-        const speechConfig = sdk.SpeechConfig.fromSubscription(
-            process.env.AZURE_SPEECH_KEY,
-            process.env.AZURE_SPEECH_REGION
-        );
-        
-        speechConfig.speechSynthesisVoiceName = voiceName;
-        speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
-        
-        const synthesizer = new sdk.SpeechSynthesizer(speechConfig);
-        
-        synthesizer.speakTextAsync(
-            text,
-            result => {
-                if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-                    const audioBuffer = Buffer.from(result.audioData);
-                    fs.writeFileSync(cacheFilePath, audioBuffer);
-                    
-                    res.setHeader('Content-Type', 'audio/mpeg');
-                    res.setHeader('X-Cache', 'MISS');
-                    res.setHeader('X-Speech-File', cacheFilename);
-                    res.send(audioBuffer);
-                } else {
-                    res.status(500).json({ error: 'Speech synthesis failed' });
-                }
-                synthesizer.close();
-            },
-            error => {
-                res.status(500).json({ error: 'Speech synthesis error' });
-                synthesizer.close();
+        // Generate speech via Amazon Polly
+        const pollyClient = new PollyClient({
+            region: process.env.AWS_REGION,
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
             }
-        );
+        });
+        
+        const params = {
+            Text: text,
+            OutputFormat: 'mp3',
+            VoiceId: voiceName,
+            LanguageCode: 'sv-SE'
+        };
+        
+        const command = new SynthesizeSpeechCommand(params);
+        const response = await pollyClient.send(command);
+        
+        // Convert stream to buffer
+        const chunks = [];
+        for await (const chunk of response.AudioStream) {
+            chunks.push(chunk);
+        }
+        const audioBuffer = Buffer.concat(chunks);
+        
+        // Cache the audio file
+        fs.writeFileSync(cacheFilePath, audioBuffer);
+        
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('X-Cache', 'MISS');
+        res.setHeader('X-Speech-File', cacheFilename);
+        res.send(audioBuffer);
     } catch (error) {
-        res.status(500).json({ error: 'TTS service error' });
+        console.error('Polly TTS error:', error);
+        res.status(500).json({ error: 'TTS service error', details: error.message });
     }
 });
 
