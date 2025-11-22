@@ -23,7 +23,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 });
 
 // GET /export - Download words as CSV
-router.get('/export', async (req, res) => {
+router.get('/export', requireAuth, async (req, res) => {
     try {
         const words = await db.getAllWords();
         
