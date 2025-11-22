@@ -24,7 +24,7 @@ body {
     width: 50px;
     height: 50px;
     border-radius: 8px;
-    background: #2a2a2a;
+    background: #1a1a1a;
     color: #e0e0e0;
     border: none;
     font-size: 2rem;
@@ -68,7 +68,7 @@ body {
 }
 
 .modal-content {
-    background: #2a2a2a;
+    background: #1a1a1a;
     padding: 40px;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -179,7 +179,7 @@ body {
 }
 
 .btn-secondary {
-    background: #2a2a2a;
+    background: #1a1a1a;
     color: #b0b0b0;
 }
 
@@ -241,7 +241,7 @@ body {
 }
 
 .word-card {
-    background: #2a2a2a;
+    background: #1a1a1a;
     padding: 60px 80px;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -410,7 +410,7 @@ body {
 }
 
 .examples-container {
-    background: #2a2a2a;
+    background: #1a1a1a;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
