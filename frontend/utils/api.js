@@ -50,6 +50,14 @@ export const api = {
                 throw new Error(errorData.error || `API error: ${response.status}`);
             }
             
+            // Handle blob responses (for audio, images, etc.)
+            if (options.responseType === 'blob') {
+                return {
+                    blob: await response.blob(),
+                    headers: response.headers
+                };
+            }
+            
             return options.method === 'DELETE' ? true : await response.json();
         } catch (error) {
             console.error(`Error with ${endpoint}:`, error);

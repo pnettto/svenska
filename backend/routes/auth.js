@@ -51,13 +51,13 @@ router.post('/verify-token', async (req, res) => {
         const { token } = req.body;
         
         if (!token) {
-            return res.status(400).json({ valid: false });
+            return res.status(400).json({ error: 'Token is required', valid: false });
         }
         
         const session = await sessionStore.get(token);
         
         if (!session) {
-            return res.json({ valid: false });
+            return res.status(200).json({ valid: false });
         }
         
         res.json({ 
@@ -66,7 +66,7 @@ router.post('/verify-token', async (req, res) => {
         });
     } catch (error) {
         console.error('Error verifying token:', error);
-        res.status(500).json({ error: 'Failed to verify token' });
+        res.status(500).json({ error: 'Failed to verify token', valid: false });
     }
 });
 

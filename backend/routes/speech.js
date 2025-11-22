@@ -30,7 +30,10 @@ const generateSpeechFilename = (text, voiceName = 'Astrid') => {
 router.post('/tts', async (req, res) => {
     const { text } = req.body;
     
-    if (!text) return res.status(400).json({ error: 'Missing required field: text' });
+    if (!text) {
+        return res.status(400).json({ error: 'Missing required field: text' });
+    }
+    
     if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
         return res.status(500).json({ error: 'AWS credentials not configured' });
     }

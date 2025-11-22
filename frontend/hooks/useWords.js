@@ -2,6 +2,16 @@ import { useState, useEffect } from '../hooks.js';
 import { storage } from '../utils/storage.js';
 import { api } from '../utils/api.js';
 
+ // Shuffle array using Fisher-Yates algorithm
+function shuffle(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 /**
  * Manages word shuffling and fetching
  */
@@ -11,7 +21,7 @@ export function useWords() {
 
   useEffect(() => {
     const initializeWords = (words) => {
-      const shuffled = api.shuffle(words);
+      const shuffled = shuffle(words);
       setShuffledWords(shuffled);
       setShuffledIndex(1);
       return shuffled[0];
@@ -40,7 +50,7 @@ export function useWords() {
       return word;
     } else {
       // Reshuffle when we run out
-      const reshuffled = api.shuffle(shuffledWords);
+      const reshuffled = shuffle(shuffledWords);
       setShuffledWords(reshuffled);
       setShuffledIndex(1);
       return reshuffled[0];
