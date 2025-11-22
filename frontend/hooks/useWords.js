@@ -58,11 +58,18 @@ export function useWords() {
 
   const getInitialWord = () => shuffledWords[0];
 
+  const findWordById = (wordId) => {
+    return shuffledWords.find(word => 
+      word._id === wordId || word.swedish === wordId
+    );
+  };
+
   return {
     shuffledWords,
     shuffledIndex,
     getNextWord,
     insertWord,
-    getInitialWord
+    getInitialWord,
+    findWordById
   };
 }

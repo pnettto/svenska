@@ -1,4 +1,4 @@
-import { useState } from '../hooks.js';
+import { useState, useEffect } from '../hooks.js';
 import { api } from '../utils/api.js';
 import { audio } from '../utils/audio.js';
 import { storage } from '../utils/storage.js';
@@ -11,6 +11,15 @@ export function useWordNavigation() {
   const [wordHistory, setWordHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const proxyUrl = storage.getProxyUrl();
+
+  // Update URL when current word changes
+  useEffect(() => {
+    if (currentWord) {
+      const url = new URL(window.location);
+      url.searchParams.set('word', currentWord._id || currentWord.swedish);
+      window.history.replaceState({}, '', url);
+    }
+  }, [currentWord]);
 
   const displayWord = (word, addToHistory = true) => {
     setCurrentWord(word);
@@ -68,6 +77,12 @@ export function useWordNavigation() {
   const canGoPrevious = historyIndex > 0;
   const canGoNext = historyIndex < wordHistory.length - 1;
 
+  // Get initial word ID from URL
+  const getInitialWordIdFromUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('word');
+  };
+
   return {
     currentWord,
     historyIndex,
@@ -76,6 +91,7 @@ export function useWordNavigation() {
     goToNext,
     canGoPrevious,
     canGoNext,
-    updateExamplesInHistory
+    updateExamplesInHistory,
+    getInitialWordIdFromUrl
   };
 }

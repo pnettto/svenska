@@ -22,6 +22,20 @@ function App() {
 
   // Initialize with first word when available
   useEffect(() => {
+    if (words.shuffledWords.length === 0) return;
+    
+    const wordIdFromUrl = navigation.getInitialWordIdFromUrl();
+    
+    if (wordIdFromUrl) {
+      // Try to find the word from the URL parameter
+      const wordFromUrl = words.findWordById(wordIdFromUrl);
+      if (wordFromUrl) {
+        navigation.displayWord(wordFromUrl);
+        return;
+      }
+    }
+    
+    // Fall back to first word if no URL param or word not found
     const initialWord = words.getInitialWord();
     if (initialWord) {
       navigation.displayWord(initialWord);
