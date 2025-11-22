@@ -27,9 +27,8 @@ export function useWords() {
     api.getAllWords().then(freshWords => {
       if (freshWords?.length > 0) {
         storage.saveWords(freshWords);
-        if (!cachedWords?.length) {
-          initializeWords(freshWords);
-        }
+        // Update working words in case there has been changes
+        initializeWords(freshWords);
       }
     });
   }, []);
