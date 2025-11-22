@@ -7,7 +7,10 @@ const path = require('path');
 require('dotenv').config();
 
 // Speech cache directory
-const SPEECH_CACHE_DIR = path.join(__dirname, '..', 'data', 'speech');
+// Use /data volume on Fly.io, fallback to local path for development
+const SPEECH_CACHE_DIR = process.env.FLY_APP_NAME 
+    ? '/data/speech' 
+    : path.join(__dirname, '..', 'data', 'speech');
 
 // Ensure cache directory exists
 if (!fs.existsSync(SPEECH_CACHE_DIR)) {
