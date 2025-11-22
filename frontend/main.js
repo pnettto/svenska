@@ -1,11 +1,12 @@
 import { html } from './htm.js';
 import { render } from './libs/preact.module.js';
 import { useEffect, useState } from './hooks.js';
-import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal, WordTableModal, PinModal } from './components.js';
+import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal, EditWordModal, WordTableModal, PinModal } from './components.js';
 import { useWords } from './hooks/useWords.js';
 import { useWordNavigation } from './hooks/useWordNavigation.js';
 import { useExamples } from './hooks/useExamples.js';
 import { useCustomWord } from './hooks/useCustomWord.js';
+import { useEditWord } from './hooks/useEditWord.js';
 import { useWordInteraction } from './hooks/useWordInteraction.js';
 import { usePinAuth } from './hooks/usePinAuth.js';
 import { api } from './utils/api.js';
@@ -20,10 +21,10 @@ function App() {
   const navigation = useWordNavigation();
   const examples = useExamples();
   const customWord = useCustomWord();
+  const editWord = useEditWord();
   const interaction = useWordInteraction();
   const pinAuth = usePinAuth();
   const [wordTableOpen, setWordTableOpen] = useState(false);
-  const [editingWord, setEditingWord] = useState(null);
 
   // Initialize with first word when available
   useEffect(() => {
@@ -84,39 +85,41 @@ function App() {
     }
   };
 
-  // Handle custom word submission (add or edit)
+  // Handle custom word submission (add only)
   const handleSubmitCustomWord = async (swedish, english) => {
     // Check PIN auth before allowing interaction
     if (pinAuth.shouldBlock) return;
     if (!pinAuth.recordInteraction()) return;
 
     try {
-      if (editingWord) {
-        // Edit mode
-        const translation = english || await customWord.translateWord(swedish);
-        const updatedWord = await api.updateWord(
-          editingWord._id,
-          swedish,
-          translation,
-          editingWord.examples || []
-        );
-        if (updatedWord) {
-          words.updateWord(updatedWord);
-          if (navigation.currentWord?._id === editingWord._id) {
-            navigation.displayWord(updatedWord);
-          }
-          setEditingWord(null);
-          customWord.setModalOpen(false);
-        }
-      } else {
-        // Add mode
-        await customWord.submitCustomWord(swedish, (newWord) => {
-          words.insertWord(newWord, words.shuffledIndex);
-          navigation.displayWord(newWord);
-          interaction.reset();
-          examples.reset();
-        });
+      await customWord.submitCustomWord(swedish, (newWord) => {
+        words.insertWord(newWord, words.shuffledIndex);
+        navigation.displayWord(newWord);
+        interaction.reset();
+        examples.reset();
+      });
+    } catch (error) {
+      if (pinAuth.handleAuthError(error)) {
+        // Auth error handled, modal will show
+        return;
       }
+      // Other errors already handled by the hook
+    }
+  };
+
+  // Handle edit word submission
+  const handleSubmitEditWord = async (swedish, english) => {
+    // Check PIN auth before allowing interaction
+    if (pinAuth.shouldBlock) return;
+    if (!pinAuth.recordInteraction()) return;
+
+    try {
+      await editWord.updateWord(swedish, english, (updatedWord) => {
+        words.updateWord(updatedWord);
+        if (navigation.currentWord?._id === editWord.editingWord._id) {
+          navigation.displayWord(updatedWord);
+        }
+      });
     } catch (error) {
       if (pinAuth.handleAuthError(error)) {
         // Auth error handled, modal will show
@@ -165,8 +168,7 @@ function App() {
 
   // Handle edit word
   const handleEditWord = (word) => {
-    setEditingWord(word);
-    customWord.setModalOpen(true);
+    editWord.openEditModal(word);
   };
 
   // Handle delete word
@@ -226,12 +228,19 @@ function App() {
       
       <${CustomWordModal}
         isOpen=${customWord.modalOpen}
-        onClose=${() => { customWord.setModalOpen(false); setEditingWord(null); }}
+        onClose=${() => customWord.setModalOpen(false)}
         onSubmit=${handleSubmitCustomWord}
         isTranslating=${customWord.isTranslating}
         onGenerateRandom=${customWord.generateRandomWord}
         isGeneratingRandom=${customWord.isGeneratingRandom}
-        initialWord=${editingWord}
+      />
+
+      <${EditWordModal}
+        isOpen=${editWord.modalOpen}
+        onClose=${editWord.closeEditModal}
+        onSubmit=${handleSubmitEditWord}
+        isUpdating=${editWord.isUpdating}
+        word=${editWord.editingWord}
       />
 
       <${WordTableModal}

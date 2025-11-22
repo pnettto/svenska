@@ -3,5 +3,6 @@ export { WordCard } from './components/WordCard.js';
 export { ButtonGroup } from './components/ButtonGroup.js';
 export { ExamplesSection } from './components/ExamplesSection.js';
 export { CustomWordModal } from './components/CustomWordModal.js';
+export { EditWordModal } from './components/EditWordModal.js';
 export { WordTableModal } from './components/WordTableModal.js';
 export { PinModal } from './components/PinModal.js';
