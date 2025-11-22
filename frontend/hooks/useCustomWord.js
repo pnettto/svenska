@@ -1,5 +1,5 @@
 import { useState } from '../hooks.js';
-import { api } from '../utils/api.js';
+import { createWord, generateRandomWord as generateRandomWordApi } from '../api/wordApi.js';
 import { words } from '../utils/words.js';
 import { storage } from '../utils/storage.js';
 
@@ -16,7 +16,7 @@ export function useCustomWord() {
     setIsGeneratingRandom(true);
     
     try {
-      const result = await api.generateRandomWord();
+      const result = await generateRandomWordApi();
       if (!result) {
         throw new Error('Failed to generate random word');
       }
@@ -43,7 +43,7 @@ export function useCustomWord() {
 
     try {
       const translation = await words.translate(proxyUrl, swedish);
-      const newWord = await api.createWord(swedish, translation, []);
+      const newWord = await createWord(swedish, translation, []);
       if (!newWord) throw new Error('Failed to create word');
 
       setModalOpen(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from '../hooks.js';
 import { storage } from '../utils/storage.js';
-import { api } from '../utils/api.js';
+import { verifyPin as verifyPinApi, verifyToken as verifyTokenApi } from '../api/authApi.js';
 
 /**
  * Manages PIN authentication state and interaction counting
@@ -24,7 +24,7 @@ export function usePinAuth() {
       
       if (token) {
         // Verify token with backend
-        const result = await api.verifyToken(token);
+        const result = await verifyTokenApi(token);
         if (result.valid) {
           setIsAuthenticated(true);
         } else {
@@ -65,7 +65,7 @@ export function usePinAuth() {
         return;
       }
 
-      const result = await api.verifyToken(token);
+      const result = await verifyTokenApi(token);
       if (!result.valid) {
         storage.setSessionToken(null);
         setIsAuthenticated(false);
@@ -125,7 +125,7 @@ export function usePinAuth() {
     setPinError('');
 
     try {
-      const result = await api.verifyPin(pin);
+      const result = await verifyPinApi(pin);
       
       if (result.valid && result.token) {
         storage.setSessionToken(result.token);

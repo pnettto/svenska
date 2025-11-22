@@ -1,5 +1,5 @@
 import { useState, useEffect } from '../hooks.js';
-import { api } from '../utils/api.js';
+import { incrementReadCount } from '../api/wordApi.js';
 import { audio } from '../utils/audio.js';
 import { storage } from '../utils/storage.js';
 
@@ -34,7 +34,7 @@ export function useWordNavigation() {
       
       // Track read count
       if (word._id) {
-        api.incrementReadCount(word._id).catch(() => {});
+        incrementReadCount(word._id).catch(() => {});
       }
     }
 

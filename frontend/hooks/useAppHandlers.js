@@ -1,4 +1,4 @@
-import { api } from '../utils/api.js';
+import { deleteWord } from '../api/wordApi.js';
 
 /**
  * Centralized event handlers for the app
@@ -117,7 +117,7 @@ export function useAppHandlers({
   // Handle delete word
   const handleDeleteWord = async (word) => {
     try {
-      const success = await api.deleteWord(word._id);
+      const success = await deleteWord(word._id);
       if (success) {
         words.removeWord(word._id);
         if (navigation.currentWord?._id === word._id) {

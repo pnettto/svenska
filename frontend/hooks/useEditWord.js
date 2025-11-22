@@ -1,5 +1,5 @@
 import { useState } from '../hooks.js';
-import { api } from '../utils/api.js';
+import { updateWord } from '../api/wordApi.js';
 
 /**
  * Manages word editing
@@ -25,7 +25,7 @@ export function useEditWord() {
     setIsUpdating(true);
 
     try {
-      const updatedWord = await api.updateWord(
+      const updatedWord = await updateWord(
         editingWord._id,
         swedish,
         english,

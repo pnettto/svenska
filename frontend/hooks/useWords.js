@@ -1,6 +1,6 @@
 import { useState, useEffect } from '../hooks.js';
 import { storage } from '../utils/storage.js';
-import { api } from '../utils/api.js';
+import { getAllWords } from '../api/wordApi.js';
 
  // Shuffle array using Fisher-Yates algorithm
 function shuffle(array) {
@@ -34,7 +34,7 @@ export function useWords() {
     }
 
     // Fetch fresh words in background
-    api.getAllWords().then(freshWords => {
+    getAllWords().then(freshWords => {
       if (freshWords?.length > 0) {
         storage.saveWords(freshWords);
         // Update working words in case there has been changes

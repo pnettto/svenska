@@ -1,5 +1,5 @@
 import { useState } from '../hooks.js';
-import { api } from '../utils/api.js';
+import { updateWord } from '../api/wordApi.js';
 import { audio } from '../utils/audio.js';
 import { examples as examplesService } from '../utils/examples.js';
 import { storage } from '../utils/storage.js';
@@ -52,7 +52,7 @@ export function useExamples() {
       
       // Update word in database
       if (word._id) {
-        await api.updateWord(word._id, word.original, word.translation, updatedExamples);
+        await updateWord(word._id, word.original, word.translation, updatedExamples);
       }
       
       // Update history
