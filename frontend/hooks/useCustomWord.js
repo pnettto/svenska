@@ -29,6 +29,10 @@ export function useCustomWord() {
     }
   };
 
+  const translateWord = async (swedish) => {
+    return await words.translate(proxyUrl, swedish);
+  };
+
   const submitCustomWord = async (swedish, onSuccess) => {
     if (!swedish.trim()) {
       alert('Vänligen fyll i ett svenskt ord / Please enter a Swedish word');
@@ -49,6 +53,10 @@ export function useCustomWord() {
       }
 
     } catch (error) {
+      if (error?.authError) {
+        // Re-throw auth errors so they can be handled at app level
+        throw error;
+      }
       alert('Kunde inte hämta översättning / Failed to fetch translation');
     } finally {
       setIsTranslating(false);
@@ -61,6 +69,7 @@ export function useCustomWord() {
     isTranslating,
     isGeneratingRandom,
     generateRandomWord,
-    submitCustomWord
+    submitCustomWord,
+    translateWord
   };
 }

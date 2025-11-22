@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { requireAuth } = require('../middleware/auth');
 
 // GET /words - Get all words
-router.get('/', async (req, res) => {
+router.get('/words', async (req, res) => {
     try {
         const words = await db.getAllWords();
         res.json({ words, count: words.length });
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /words/:id - Get a single word by ID
-router.get('/:id', async (req, res) => {
+router.get('/words/:id', async (req, res) => {
     try {
         const word = await db.getWordById(req.params.id);
         if (!word) return res.status(404).json({ error: 'Word not found' });
@@ -24,7 +25,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /words - Create a new word
-router.post('/', async (req, res) => {
+router.post('/words', requireAuth, async (req, res) => {
     const { original, translation, examples = [], speech = null } = req.body;
     
     if (!original || !translation) {
@@ -41,7 +42,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /words/:id - Update an existing word
-router.put('/:id', async (req, res) => {
+router.put('/words/:id', requireAuth, async (req, res) => {
     const { original, translation, examples = [], speech = null } = req.body;
     
     if (!original || !translation) {
@@ -58,7 +59,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // PATCH /words/:id - Partially update a word
-router.patch('/:id', async (req, res) => {
+router.patch('/words/:id', async (req, res) => {
     try {
         // Handle read count increment
         if (req.body.incrementReadCount) {
@@ -89,7 +90,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE /words/:id - Delete a word
-router.delete('/:id', async (req, res) => {
+router.delete('/words/:id', requireAuth, async (req, res) => {
     try {
         const deleted = await db.deleteWord(req.params.id);
         if (!deleted) return res.status(404).json({ error: 'Word not found' });

@@ -7,20 +7,30 @@ export function CustomWordModal({
   onSubmit,
   isTranslating,
   onGenerateRandom,
-  isGeneratingRandom
+  isGeneratingRandom,
+  initialWord = null
 }) {
   const inputRef = useRef();
   const [customSwedish, setCustomSwedish] = useState('');
+  const [customEnglish, setCustomEnglish] = useState('');
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isOpen]);
+    if (isOpen && initialWord) {
+      setCustomSwedish(initialWord.original || '');
+      setCustomEnglish(initialWord.translation || '');
+    } else if (!isOpen) {
+      setCustomSwedish('');
+      setCustomEnglish('');
+    }
+  }, [isOpen, initialWord]);
 
   const handleSubmit = () => {
-    onSubmit(customSwedish);
+    onSubmit(customSwedish, customEnglish);
     setCustomSwedish('');
+    setCustomEnglish('');
   };
 
   const handleKeyDown = (e) => {
@@ -31,6 +41,7 @@ export function CustomWordModal({
 
   const handleClose = () => {
     setCustomSwedish('');
+    setCustomEnglish('');
     onClose();
   };
 
@@ -46,7 +57,7 @@ export function CustomWordModal({
   return html`
     <div class="modal" onClick=${(e) => e.target.classList.contains('modal') && handleClose()}>
       <div class="modal-content">
-        <h2>Lägg till eget ord</h2>
+        <h2>${initialWord ? 'Redigera ord' : 'Lägg till eget ord'}</h2>
         <div class="input-group">
           <label for="customSwedish">Svenska ord:</label>
           <input 
@@ -68,6 +79,20 @@ export function CustomWordModal({
             ${isGeneratingRandom ? '✨ Genererar...' : '✨ AI slumpord'}
           </button>
         </div>
+        ${initialWord && html`
+          <div class="input-group">
+            <label for="customEnglish">Engelsk översättning:</label>
+            <input 
+              type="text" 
+              id="customEnglish"
+              value=${customEnglish}
+              onInput=${(e) => setCustomEnglish(e.target.value)}
+              onKeyDown=${handleKeyDown}
+              disabled=${isTranslating || isGeneratingRandom}
+              placeholder="t.ex. dog"
+            />
+          </div>
+        `}
         <div class="modal-buttons">
           <button 
             class="btn-secondary" 
@@ -81,7 +106,7 @@ export function CustomWordModal({
             onClick=${handleSubmit}
             disabled=${isTranslating || isGeneratingRandom}
           >
-            Lägg till
+            ${initialWord ? 'Spara' : 'Lägg till'}
           </button>
         </div>
         ${isTranslating && html`

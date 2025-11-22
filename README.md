@@ -12,6 +12,7 @@ A Chrome extension that displays a random Swedish word with its English translat
 - ➕ Add custom words with AI-powered translation
 - 📚 Comprehensive word database with various word types
 - 💾 Offline support with cached words
+- 🔐 PIN authentication for unlimited access after 5 free interactions
 
 ## Project Structure
 
@@ -54,8 +55,11 @@ svenska-new-tab/
    OPENAI_API_KEY=your_openai_api_key_here
    AZURE_SPEECH_KEY=your_azure_speech_key_here
    AZURE_SPEECH_REGION=your_azure_region_here
+   PIN=your_secure_pin_here
    PORT=3001
    ```
+
+   **Note**: The PIN environment variable is required for the authentication feature that limits free usage to 5 interactions per session.
 
 4. Start the server:
    ```bash
@@ -97,6 +101,7 @@ svenska-new-tab/
 - **Generate examples**: Get AI-generated example sentences
 - **Add custom words**: Use the "+" button to add your own words with AI translation
 - **Offline mode**: Works with cached words when backend is unavailable
+- **PIN Authentication**: After 5 free interactions per session, a PIN is required to continue using the app. Once authenticated, you have unlimited access for that session. The PIN is stored in localStorage for future sessions.
 
 ## Technologies Used
 
@@ -138,6 +143,7 @@ python3 -m http.server
 - `GET /api/words` - Get all words
 - `GET /api/words/:id` - Get specific word
 - `POST /api/words` - Add new word
+- `POST /api/verify-pin` - Verify PIN for authentication
 - `POST /api/llm/translate` - Translate text
 - `POST /api/llm/examples` - Generate example sentences
 - `POST /api/llm/audio` - Generate speech audio

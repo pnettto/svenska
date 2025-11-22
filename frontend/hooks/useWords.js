@@ -56,6 +56,16 @@ export function useWords() {
     });
   };
 
+  const removeWord = (wordId) => {
+    setShuffledWords(prev => prev.filter(word => word._id !== wordId));
+  };
+
+  const updateWord = (updatedWord) => {
+    setShuffledWords(prev => 
+      prev.map(word => word._id === updatedWord._id ? updatedWord : word)
+    );
+  };
+
   const getInitialWord = () => shuffledWords[0];
 
   const findWordById = (wordId) => {
@@ -69,6 +79,8 @@ export function useWords() {
     shuffledIndex,
     getNextWord,
     insertWord,
+    removeWord,
+    updateWord,
     getInitialWord,
     findWordById
   };

@@ -3,6 +3,7 @@ const router = express.Router();
 const OpenAI = require('openai');
 const prompts = require('../prompts');
 const db = require('../database');
+const { requireAuthOrLimit } = require('../middleware/auth');
 require('dotenv').config();
 
 const openai = new OpenAI({
@@ -10,7 +11,7 @@ const openai = new OpenAI({
 });
 
 // POST /generate-examples - Generate example sentences using OpenAI
-router.post('/generate-examples', async (req, res) => {
+router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
     const { swedishWord, englishTranslation, existingExamples, wordId } = req.body;
     
     if (!swedishWord || !englishTranslation) {
@@ -55,7 +56,7 @@ router.post('/generate-examples', async (req, res) => {
 });
 
 // POST /translate - Translate text using OpenAI
-router.post('/translate', async (req, res) => {
+router.post('/translate', requireAuthOrLimit, async (req, res) => {
     const { text, sourceLang = 'sv', targetLang = 'en' } = req.body;
     
     if (!text) return res.status(400).json({ error: 'Missing required field: text' });
@@ -81,7 +82,7 @@ router.post('/translate', async (req, res) => {
 });
 
 // POST /generate-random-word - Generate a random Swedish word using OpenAI
-router.post('/generate-random-word', async (req, res) => {
+router.post('/generate-random-word', requireAuthOrLimit, async (req, res) => {
     if (!process.env.OPENAI_API_KEY) {
         return res.status(500).json({ error: 'OpenAI API key not configured' });
     }

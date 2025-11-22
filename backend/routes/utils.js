@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { requireAuth } = require('../middleware/auth');
 
 // GET /stats - Get database statistics
-router.get('/stats', async (req, res) => {
+router.get('/stats', requireAuth, async (req, res) => {
     try {
         const count = await db.getWordCount();
         const limit = parseInt(req.query.limit) || 10;

@@ -63,6 +63,10 @@ export function useExamples() {
       examplesService.preloadAudio(data.examples, proxyUrl);
 
     } catch (error) {
+      // Re-throw auth errors so they can be handled at app level
+      if (error?.authError) {
+        throw error;
+      }
       alert(`Failed to generate examples: ${error.message}`);
     } finally {
       setIsGeneratingExamples(false);

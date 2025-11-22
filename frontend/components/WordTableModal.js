@@ -5,7 +5,9 @@ export function WordTableModal({
   isOpen, 
   onClose, 
   words,
-  onSelectWord
+  onSelectWord,
+  onDeleteWord,
+  onEditWord
 }) {
   const [showTranslations, setShowTranslations] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +25,23 @@ export function WordTableModal({
   const handleWordClick = (word) => {
     onSelectWord(word);
     handleClose();
+  };
+
+  const handleDelete = async (e, word) => {
+    e.stopPropagation(); // Prevent word selection
+    if (confirm(`Är du säker på att du vill ta bort "${word.original}"?`)) {
+      if (onDeleteWord) {
+        await onDeleteWord(word);
+      }
+    }
+  };
+
+  const handleEdit = (e, word) => {
+    e.stopPropagation(); // Prevent word selection
+    if (onEditWord) {
+      onEditWord(word);
+      handleClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -65,7 +84,7 @@ export function WordTableModal({
             class="btn-toggle-translations" 
             onClick=${() => setShowTranslations(!showTranslations)}
           >
-            ${showTranslations ? '🙈 Göm översättningar' : '👁️ Visa översättningar'}
+            ${showTranslations ? '🙈' : '👁️'}
           </button>
         </div>
 
@@ -77,6 +96,7 @@ export function WordTableModal({
                   Svenska ${sortOrder === 'asc' ? '↑' : '↓'}
                 </th>
                 ${showTranslations && html`<th>English</th>`}
+                <th class="word-actions-header"></th>
               </tr>
             </thead>
             <tbody>
@@ -88,6 +108,22 @@ export function WordTableModal({
                 >
                   <td class="word-swedish">${word.original}</td>
                   ${showTranslations && html`<td class="word-english">${word.translation}</td>`}
+                  <td class="word-actions">
+                    <button 
+                      class="btn-edit-word" 
+                      onClick=${(e) => handleEdit(e, word)}
+                      title="Redigera ord"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      class="btn-delete-word" 
+                      onClick=${(e) => handleDelete(e, word)}
+                      title="Ta bort ord"
+                    >
+                      🗑️
+                    </button>
+                  </td>
                 </tr>
               `)}
             </tbody>

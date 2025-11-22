@@ -1,5 +1,6 @@
 // Examples generation and management utilities
 import { audio } from './audio.js';
+import { api } from './api.js';
 
 export const examples = {
     // Fetch new examples from the API
@@ -15,18 +16,12 @@ export const examples = {
             requestBody.wordId = wordId;
         }
         
-        const response = await fetch(`${proxyUrl}/api/generate-examples`, {
+        // Use api.request which includes auth headers
+        return await api.request('/api/generate-examples', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Server error: ${response.status}`);
-        }
-
-        return await response.json();
     },
 
     // Preload audio for a list of examples
