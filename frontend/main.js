@@ -1,7 +1,7 @@
 import { html } from './htm.js';
 import { render } from './libs/preact.module.js';
-import { useEffect } from './hooks.js';
-import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal } from './components.js';
+import { useEffect, useState } from './hooks.js';
+import { WordCard, ButtonGroup, ExamplesSection, CustomWordModal, WordTableModal } from './components.js';
 import { useWords } from './hooks/useWords.js';
 import { useWordNavigation } from './hooks/useWordNavigation.js';
 import { useExamples } from './hooks/useExamples.js';
@@ -19,6 +19,7 @@ function App() {
   const examples = useExamples();
   const customWord = useCustomWord();
   const interaction = useWordInteraction();
+  const [wordTableOpen, setWordTableOpen] = useState(false);
 
   // Initialize with first word when available
   useEffect(() => {
@@ -81,17 +82,33 @@ function App() {
     });
   };
 
+  // Handle selecting a word from the word table
+  const handleSelectWord = (word) => {
+    navigation.displayWord(word);
+    interaction.reset();
+    examples.loadExistingExamples(word);
+  };
+
   const canGoPrevious = navigation.canGoPrevious && !examples.isGeneratingExamples;
 
   return html`
     <div>
-      <button 
-        class="add-word-btn" 
-        onClick=${() => customWord.setModalOpen(true)}
-        title="Add custom word"
-      >
-        +
-      </button>
+      <div class="top-right-buttons">
+        <button 
+          class="word-table-btn" 
+          onClick=${() => setWordTableOpen(true)}
+          title="Se alla ord"
+        >
+          📋
+        </button>
+        <button 
+          class="add-word-btn" 
+          onClick=${() => customWord.setModalOpen(true)}
+          title="Add custom word"
+        >
+          +
+        </button>
+      </div>
       
       <${CustomWordModal}
         isOpen=${customWord.modalOpen}
@@ -100,6 +117,13 @@ function App() {
         isTranslating=${customWord.isTranslating}
         onGenerateRandom=${customWord.generateRandomWord}
         isGeneratingRandom=${customWord.isGeneratingRandom}
+      />
+
+      <${WordTableModal}
+        isOpen=${wordTableOpen}
+        onClose=${() => setWordTableOpen(false)}
+        words=${words.shuffledWords}
+        onSelectWord=${handleSelectWord}
       />
       
       <div class="container">
