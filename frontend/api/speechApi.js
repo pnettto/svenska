@@ -1,21 +1,21 @@
 import { BASE_URL } from './config.js';
+import { request } from './request.js';
 
 // Speech/audio API functions
-// Note: Uses direct fetch for blob responses
 
 export async function generateSpeech(text) {
   try {
-    const response = await fetch(`${BASE_URL}/api/tts`, {
+    const result = await request('/api/tts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
+      responseType: 'blob'
     });
     
-    if (!response.ok) return null;
+    if (!result) return null;
     
     return {
-      audioBlob: await response.blob(),
-      speechFile: response.headers.get('X-Speech-File')
+      audioBlob: result.blob,
+      speechFile: result.headers.get('X-Speech-File')
     };
   } catch (error) {
     console.error('Error generating speech:', error);
@@ -24,5 +24,5 @@ export async function generateSpeech(text) {
 }
 
 export function getSpeechUrl(filename) {
-  return `${BASE_URL}/api/speech/${filename}`;  
+  return `${BASE_URL}/api/speech/${filename}`;
 }
