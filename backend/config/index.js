@@ -39,7 +39,7 @@ module.exports = {
     
     // Auth
     auth: {
-        pinHash: process.env.PIN_HASH,
+        pin: process.env.PIN,
         sessionSecret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
         sessionMaxAge: 24 * 60 * 60 * 1000, // 24 hours
         rateLimitMax: 20,

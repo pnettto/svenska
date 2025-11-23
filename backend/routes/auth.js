@@ -1,16 +1,16 @@
+const { authLimiter } = require('../middleware/rateLimiter');
+const config = require('../config');
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 const sessionStore = require('../redisSessionStore');
-const config = require('../config');
-const { authLimiter } = require('../middleware/rateLimiter');
 const validation = require('../middleware/validation');
 
 // POST / - Verify user PIN and generate session token
 router.post('/', authLimiter, validation.auth.login, async (req, res) => {
     try {
         const { pin } = req.body;
-        const correctPin = process.env.PIN;
+        const correctPin = config.auth.pin;
         
         if (!correctPin) {
             return res.status(500).json({ error: 'PIN not configured on server' });
