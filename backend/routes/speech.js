@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const speechService = require('../services/speechService');
-const path = require('path');
+const validation = require('../middleware/validation');
 
 // POST /tts - Text-to-Speech using Amazon Polly with caching
-router.post('/tts', async (req, res) => {
+router.post('/tts', validation.speech.tts, async (req, res) => {
     const { text } = req.body;
-    
-    if (!text) {
-        return res.status(400).json({ error: 'Missing required field: text' });
-    }
     
     try {
         const result = await speechService.synthesize(text);
@@ -26,12 +22,8 @@ router.post('/tts', async (req, res) => {
 });
 
 // GET /:filename - Serve cached speech audio by filename
-router.get('/:filename', (req, res) => {
+router.get('/:filename', validation.speech.getFile, (req, res) => {
     const { filename } = req.params;
-    
-    if (!/^[a-f0-9]{64}\.mp3$/.test(filename)) {
-        return res.status(400).json({ error: 'Invalid filename format' });
-    }
     
     if (!speechService.isCached(filename)) {
         return res.status(404).json({ error: 'Speech file not found' });

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const wordService = require('../services/wordService');
 const { requireAuth } = require('../middleware/auth');
+const validation = require('../middleware/validation');
 
 // GET /words - Get all words
 router.get('/', async (req, res) => {
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /:id - Get a single word by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', validation.word.getById, async (req, res) => {
     try {
         const word = await wordService.getWordById(req.params.id);
         if (!word) return res.status(404).json({ error: 'Word not found' });
@@ -25,12 +26,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST / - Create a new word
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, validation.word.create, async (req, res) => {
     const { original, translation, examples = [], speech = null } = req.body;
-    
-    if (!original || !translation) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
     
     try {
         const newWord = await wordService.createWord(original, translation, examples, speech);
@@ -42,12 +39,8 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PUT /:id - Update an existing word
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAuth, validation.word.update, async (req, res) => {
     const { original, translation, examples = [], speech = null } = req.body;
-    
-    if (!original || !translation) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
     
     try {
         const updatedWord = await wordService.updateWord(req.params.id, original, translation, examples, speech);
@@ -59,7 +52,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // PATCH /:id - Partially update a word
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', validation.word.patch, async (req, res) => {
     try {
         // Handle read count increment
         if (req.body.incrementReadCount) {
@@ -90,7 +83,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE /:id - Delete a word
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, validation.word.delete, async (req, res) => {
     try {
         const deleted = await wordService.deleteWord(req.params.id);
         if (!deleted) return res.status(404).json({ error: 'Word not found' });

@@ -4,12 +4,17 @@ module.exports = {
     port: process.env.PORT || 3000,
     
     // Environment
-    isProduction: !!process.env.FLY_APP_NAME,
+    isProduction: process.env.NODE_ENV === 'production' || !!process.env.FLY_APP_NAME,
     flyAppName: process.env.FLY_APP_NAME,
     
     // Database
     database: {
         path: process.env.FLY_APP_NAME ? '/data/words.db' : 'data/words.db'
+    },
+    
+    // Redis
+    redis: {
+        url: process.env.REDIS_URL || 'redis://localhost:6379'
     },
     
     // Speech/Audio
@@ -39,5 +44,18 @@ module.exports = {
         sessionMaxAge: 24 * 60 * 60 * 1000, // 24 hours
         rateLimitMax: 20,
         rateLimitWindowMs: 15 * 60 * 1000 // 15 minutes
+    },
+    
+    // CORS
+    cors: {
+        allowedOrigins: process.env.ALLOWED_ORIGINS 
+            ? process.env.ALLOWED_ORIGINS.split(',') 
+            : ['http://localhost:3000']
+    },
+    
+    // Security
+    security: {
+        requestSizeLimit: '10kb',
+        enforceHttps: process.env.NODE_ENV === 'production'
     }
 };

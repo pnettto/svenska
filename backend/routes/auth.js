@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const sessionStore = require('../sessionStore');
+const sessionStore = require('../redisSessionStore');
 const config = require('../config');
+const { authLimiter } = require('../middleware/rateLimiter');
+const validation = require('../middleware/validation');
 
 // POST / - Verify user PIN and generate session token
-router.post('/', async (req, res) => {
+router.post('/', authLimiter, validation.auth.login, async (req, res) => {
     try {
         const { pin } = req.body;
         const correctPin = process.env.PIN;
@@ -14,11 +16,15 @@ router.post('/', async (req, res) => {
             return res.status(500).json({ error: 'PIN not configured on server' });
         }
         
-        if (!pin) {
-            return res.status(400).json({ error: 'PIN is required' });
-        }
+        // Security: Use constant-time comparison to prevent timing attacks
+        const pinBuffer = Buffer.from(pin);
+        const correctPinBuffer = Buffer.from(correctPin);
         
-        const isValid = pin === correctPin;
+        // Ensure buffers are same length for timing-safe comparison
+        let isValid = false;
+        if (pinBuffer.length === correctPinBuffer.length) {
+            isValid = crypto.timingSafeEqual(pinBuffer, correctPinBuffer);
+        }
         
         if (isValid) {
             // Generate secure session token
@@ -36,6 +42,8 @@ router.post('/', async (req, res) => {
                 expiresAt
             });
         } else {
+            // Add small delay to prevent timing attacks on invalid attempts
+            await new Promise(resolve => setTimeout(resolve, 100));
             res.json({ valid: false });
         }
     } catch (error) {
@@ -45,13 +53,9 @@ router.post('/', async (req, res) => {
 });
 
 // POST /verify-token - Verify session token
-router.post('/verify-token', async (req, res) => {
+router.post('/verify-token', validation.auth.verifyToken, async (req, res) => {
     try {
         const { token } = req.body;
-        
-        if (!token) {
-            return res.status(400).json({ error: 'Token is required', valid: false });
-        }
         
         const session = await sessionStore.get(token);
         

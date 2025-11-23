@@ -3,14 +3,12 @@ const router = express.Router();
 const aiService = require('../services/aiService');
 const wordService = require('../services/wordService');
 const { requireAuthOrLimit } = require('../middleware/auth');
+const { aiLimiter } = require('../middleware/rateLimiter');
+const validation = require('../middleware/validation');
 
 // POST /generate-examples - Generate example sentences using AI
-router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
+router.post('/generate-examples', aiLimiter, requireAuthOrLimit, validation.ai.generateExamples, async (req, res) => {
     const { swedishWord, englishTranslation, existingExamples, wordId } = req.body;
-    
-    if (!swedishWord || !englishTranslation) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
     
     try {
         const examples = await aiService.generateExamples(swedishWord, englishTranslation, existingExamples);
@@ -32,10 +30,8 @@ router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
 });
 
 // POST /translate - Translate text using AI
-router.post('/translate', requireAuthOrLimit, async (req, res) => {
+router.post('/translate', aiLimiter, requireAuthOrLimit, validation.ai.translate, async (req, res) => {
     const { text, sourceLang = 'sv', targetLang = 'en' } = req.body;
-    
-    if (!text) return res.status(400).json({ error: 'Missing required field: text' });
     
     try {
         const translation = await aiService.translate(text, sourceLang, targetLang);
@@ -47,7 +43,7 @@ router.post('/translate', requireAuthOrLimit, async (req, res) => {
 });
 
 // POST /generate-random-word - Generate a random Swedish word using AI
-router.post('/generate-random-word', requireAuthOrLimit, async (req, res) => {
+router.post('/generate-random-word', aiLimiter, requireAuthOrLimit, async (req, res) => {
     try {
         const result = await aiService.generateRandomWord();
         res.json(result);
