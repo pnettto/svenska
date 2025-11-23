@@ -1,16 +1,16 @@
 const sessionStore = require('../redisSessionStore');
 const config = require('../config');
-const { createClient } = require('redis');
+const { Redis } = require('@upstash/redis')
 
 // Redis client for tracking IP-based rate limiting
 let rateLimitClient = null;
 
 async function initRateLimitClient() {
     if (!rateLimitClient) {
-        rateLimitClient = createClient({
-            url: config.redis.url
+        rateLimitClient = new Redis({
+            url: config.redis.url,
+            token: config.redis.token,
         });
-        await rateLimitClient.connect();
     }
     return rateLimitClient;
 }

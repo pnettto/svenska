@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
-const { createClient } = require('redis');
+const { Redis } = require('@upstash/redis')
 const config = require('../config');
 
 // Redis-backed rate limit store
@@ -8,36 +8,30 @@ class RedisStore {
     constructor(options = {}) {
         this.prefix = options.prefix || 'rl:';
         this.client = null;
-        this.connected = false;
         this.windowMs = options.windowMs || 60000;
         this.initClient();
     }
 
-    async initClient() {
+    initClient() {
         try {
-            this.client = createClient({
+            this.client = new Redis({
                 url: config.redis.url,
-                socket: {
-                    connectTimeout: 5000
-                }
+                token: config.redis.token
             });
-            
-            await this.client.connect();
-            this.connected = true;
         } catch (error) {
             console.error('Redis rate limiter connection error:', error);
         }
     }
 
     async increment(key) {
-        if (!this.connected) {
+        if (!this.client) {
             // Fallback to in-memory if Redis unavailable
             return { totalHits: 0, resetTime: new Date(Date.now() + this.windowMs) };
         }
 
         const fullKey = `${this.prefix}${key}`;
         const current = await this.client.incr(fullKey);
-        
+
         if (current === 1) {
             await this.client.expire(fullKey, Math.ceil(this.windowMs / 1000));
         }
@@ -52,13 +46,13 @@ class RedisStore {
     }
 
     async decrement(key) {
-        if (!this.connected) return;
+        if (!this.client) return;
         const fullKey = `${this.prefix}${key}`;
         await this.client.decr(fullKey);
     }
 
     async resetKey(key) {
-        if (!this.connected) return;
+        if (!this.client) return;
         const fullKey = `${this.prefix}${key}`;
         await this.client.del(fullKey);
     }

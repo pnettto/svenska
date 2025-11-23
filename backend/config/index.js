@@ -14,7 +14,8 @@ module.exports = {
     
     // Redis
     redis: {
-        url: process.env.REDIS_URL || 'redis://localhost:6379'
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        token: process.env.REDIS_TOKEN
     },
     
     // Speech/Audio

@@ -1,4 +1,4 @@
-const { createClient } = require('redis');
+const { Redis } = require('@upstash/redis')
 const config = require('./config');
 
 class RedisSessionStore {
@@ -8,44 +8,19 @@ class RedisSessionStore {
     }
 
     async connect() {
-        if (this.isConnected) {
-            return;
-        }
-
-        try {
-            this.client = createClient({
-                url: config.redis.url,
-                socket: {
-                    connectTimeout: 5000,
-                    reconnectStrategy: (retries) => {
-                        if (retries > 10) {
-                            console.error('Redis connection failed after 10 retries');
-                            return new Error('Redis connection failed');
-                        }
-                        return Math.min(retries * 100, 3000);
-                    }
-                }
-            });
-
-            this.client.on('error', (err) => {
-                console.error('Redis Client Error:', err);
-            });
-
-            this.client.on('connect', () => {
-                console.log('Redis connected');
+            if (this.isConnected && this.client) {
+                return;
+            }
+            try {
+                this.client = new Redis({
+                    url: config.redis.url,
+                    token: config.redis.token
+                });
                 this.isConnected = true;
-            });
-
-            this.client.on('disconnect', () => {
-                console.log('Redis disconnected');
-                this.isConnected = false;
-            });
-
-            await this.client.connect();
-        } catch (error) {
-            console.error('Failed to connect to Redis:', error);
-            throw error;
-        }
+            } catch (error) {
+                console.error('Failed to initialize Redis client:', error);
+                throw error;
+            }
     }
 
     async disconnect() {
@@ -70,10 +45,10 @@ class RedisSessionStore {
         const ttl = Math.floor((sessionData.expiresAt - Date.now()) / 1000);
         
         if (ttl > 0) {
-            await this.client.setEx(
+            await this.client.set(
                 `session:${token}`,
-                ttl,
-                JSON.stringify(session)
+                JSON.stringify(session),
+                { ex: ttl }
             );
         }
 
