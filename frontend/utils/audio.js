@@ -6,7 +6,7 @@ export const audio = {
     // Generate audio using /api/tts and return the speech filename
     async generateAudio(text, proxyUrl) {
         try {
-            const response = await fetch(`${proxyUrl}/api/tts`, {
+            const response = await fetch(`${proxyUrl}/api/speech/tts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text })
