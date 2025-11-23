@@ -8,6 +8,9 @@ const { globalLimiter, speedLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
+// Trust proxy - required for Fly.io and rate limiting
+app.set('trust proxy', 1);
+
 // Security: Helmet for security headers
 app.use(helmet({
     contentSecurityPolicy: {
@@ -44,15 +47,10 @@ const corsOptions = {
         // Trim whitespace from allowed origins
         const allowedOrigins = config.cors.allowedOrigins.map(o => o.trim());
         
-        console.log('CORS Check - Origin:', origin);
-        console.log('CORS Check - Allowed:', allowedOrigins);
-        
         if (allowedOrigins.includes(origin) || 
             origin.startsWith('chrome-extension://')) {
-            console.log('CORS Check - ALLOWED');
             callback(null, true);
         } else {
-            console.log('CORS Check - REJECTED');
             // Don't throw error, just reject with false
             callback(null, false);
         }

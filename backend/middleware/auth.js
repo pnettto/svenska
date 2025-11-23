@@ -82,6 +82,8 @@ async function requireAuthOrLimit(req, res, next) {
     const clientIp = req.ip || req.connection.remoteAddress;
     const MAX_FREE_INTERACTIONS = config.auth.rateLimitMax;
     
+    console.log('Auth Check - IP:', clientIp, 'Has Token:', !!token, 'Max Free:', MAX_FREE_INTERACTIONS);
+    
     // If they have a token, it MUST be valid
     if (token) {
         try {
@@ -105,21 +107,30 @@ async function requireAuthOrLimit(req, res, next) {
     try {
         const interactionCount = await getInteractionCount(clientIp);
         
-        if (interactionCount < MAX_FREE_INTERACTIONS) {
-            await incrementInteractionCount(clientIp);
-            return next();
+        console.log('Rate Limit Check - IP:', clientIp, 'Count:', interactionCount, 'Limit:', MAX_FREE_INTERACTIONS);
+        
+        // Check if they've exceeded the limit
+        if (interactionCount >= MAX_FREE_INTERACTIONS) {
+            console.log('Rate Limit - BLOCKED');
+            return res.status(401).json({ 
+                error: 'Authentication required after free interactions',
+                code: 'LIMIT_EXCEEDED',
+                interactionCount: interactionCount,
+                maxFree: MAX_FREE_INTERACTIONS
+            });
         }
         
-        // Exceeded limit and no valid token
-        return res.status(401).json({ 
-            error: 'Authentication required after free interactions',
-            code: 'LIMIT_EXCEEDED',
-            interactionCount
-        });
+        // Increment counter and allow request
+        const newCount = await incrementInteractionCount(clientIp);
+        console.log('Rate Limit - ALLOWED, new count:', newCount);
+        return next();
     } catch (error) {
         console.error('Error checking rate limit:', error);
-        // On error, allow the request but log it
-        return next();
+        // On error, block the request for security
+        return res.status(500).json({ 
+            error: 'Rate limit check failed',
+            code: 'RATE_LIMIT_ERROR'
+        });
     }
 }
 

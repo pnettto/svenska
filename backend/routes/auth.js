@@ -53,7 +53,7 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
 });
 
 // POST /verify-token - Verify session token
-router.post('/verify-token', validation.auth.verifyToken, async (req, res) => {
+router.post('/verify-token', authLimiter, validation.auth.verifyToken, async (req, res) => {
     try {
         const { token } = req.body;
         

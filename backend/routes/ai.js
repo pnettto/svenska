@@ -1,13 +1,12 @@
+const { aiLimiter } = require('../middleware/rateLimiter');
 const express = require('express');
 const router = express.Router();
 const aiService = require('../services/aiService');
 const wordService = require('../services/wordService');
-const { requireAuthOrLimit } = require('../middleware/auth');
-const { aiLimiter } = require('../middleware/rateLimiter');
 const validation = require('../middleware/validation');
 
 // POST /generate-examples - Generate example sentences using AI
-router.post('/generate-examples', aiLimiter, requireAuthOrLimit, validation.ai.generateExamples, async (req, res) => {
+router.post('/generate-examples', aiLimiter, validation.ai.generateExamples, async (req, res) => {
     const { swedishWord, englishTranslation, existingExamples, wordId } = req.body;
     
     try {
@@ -30,7 +29,7 @@ router.post('/generate-examples', aiLimiter, requireAuthOrLimit, validation.ai.g
 });
 
 // POST /translate - Translate text using AI
-router.post('/translate', aiLimiter, requireAuthOrLimit, validation.ai.translate, async (req, res) => {
+router.post('/translate', aiLimiter, validation.ai.translate, async (req, res) => {
     const { text, sourceLang = 'sv', targetLang = 'en' } = req.body;
     
     try {
@@ -43,7 +42,7 @@ router.post('/translate', aiLimiter, requireAuthOrLimit, validation.ai.translate
 });
 
 // POST /generate-random-word - Generate a random Swedish word using AI
-router.post('/generate-random-word', aiLimiter, requireAuthOrLimit, async (req, res) => {
+router.post('/generate-random-word', aiLimiter, async (req, res) => {
     try {
         const result = await aiService.generateRandomWord();
         res.json(result);

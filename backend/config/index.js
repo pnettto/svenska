@@ -42,7 +42,7 @@ module.exports = {
         pin: process.env.PIN,
         sessionSecret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
         sessionMaxAge: 24 * 60 * 60 * 1000, // 24 hours
-        rateLimitMax: 20,
+        rateLimitMax: 3,
         rateLimitWindowMs: 15 * 60 * 1000 // 15 minutes
     },
     
