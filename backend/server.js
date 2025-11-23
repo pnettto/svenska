@@ -41,11 +41,20 @@ const corsOptions = {
         // Allow requests with no origin (mobile apps, Postman, etc.)
         if (!origin) return callback(null, true);
         
-        if (config.cors.allowedOrigins.includes(origin) || 
+        // Trim whitespace from allowed origins
+        const allowedOrigins = config.cors.allowedOrigins.map(o => o.trim());
+        
+        console.log('CORS Check - Origin:', origin);
+        console.log('CORS Check - Allowed:', allowedOrigins);
+        
+        if (allowedOrigins.includes(origin) || 
             origin.startsWith('chrome-extension://')) {
+            console.log('CORS Check - ALLOWED');
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            console.log('CORS Check - REJECTED');
+            // Don't throw error, just reject with false
+            callback(null, false);
         }
     },
     credentials: true,
