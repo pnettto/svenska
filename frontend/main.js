@@ -1,7 +1,9 @@
 import { html } from './htm.js';
 import { render } from './libs/preact.module.js';
-import { useEffect, useState } from './hooks.js';
-import { AppHeader, AppModals, WordLearning } from './components.js';
+import { useEffect, useState } from './libs/hooks.module.js';
+import { AppHeader } from './components/AppHeader.js';
+import { AppModals } from './components/AppModals.js';
+import { WordLearning } from './components/WordLearning.js';
 import { useWords } from './hooks/useWords.js';
 import { useWordNavigation } from './hooks/useWordNavigation.js';
 import { useExamples } from './hooks/useExamples.js';

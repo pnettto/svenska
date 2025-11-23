@@ -1,17 +1,17 @@
-const BASE_URL = localStorage.getItem('apiBaseUrl') || 'https://svenska-new-tab-backend.fly.dev';
+import { API_BASE_URL, STORAGE_KEYS } from '../constants.js';
 
 // Get headers with session token if available
 export function getHeaders(includeAuth = true) {
   const headers = { 'Content-Type': 'application/json' };
   
   if (includeAuth) {
-    const token = localStorage.getItem('pinAuthenticated');
+    const token = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
     if (token && token !== 'true' && token !== 'false') {
       headers['x-session-token'] = token;
     }
     
     // Also send interaction count for rate limiting
-    const count = localStorage.getItem('interactionCount') || '0';
+    const count = localStorage.getItem(STORAGE_KEYS.INTERACTION_COUNT) || '0';
     headers['x-interaction-count'] = count;
   }
   
@@ -27,7 +27,7 @@ export async function request(endpoint, options = {}) {
       ...(options.headers || {})
     };
     
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers
     });

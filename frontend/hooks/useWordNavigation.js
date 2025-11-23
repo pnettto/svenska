@@ -1,4 +1,4 @@
-import { useState, useEffect } from '../hooks.js';
+import { useState, useEffect } from '../libs/hooks.module.js';
 import { incrementReadCount } from '../api/wordApi.js';
 import { audio } from '../utils/audio.js';
 import { storage } from '../utils/storage.js';

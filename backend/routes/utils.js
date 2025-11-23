@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const wordService = require('../services/wordService');
 const { requireAuth } = require('../middleware/auth');
 
 // GET /stats - Get database statistics
 router.get('/stats', requireAuth, async (req, res) => {
     try {
-        const count = await db.getWordCount();
+        const count = await wordService.getWordCount();
         const limit = parseInt(req.query.limit) || 10;
-        const mostViewed = await db.getMostViewedWords(limit);
+        const mostViewed = await wordService.getMostViewedWords(limit);
         
         res.json({ 
             totalWords: count,
@@ -25,7 +25,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 // GET /export - Download words as CSV
 router.get('/export', requireAuth, async (req, res) => {
     try {
-        const words = await db.getAllWords();
+        const words = await wordService.getAllWords();
         
         const escapeCsv = (field) => {
             if (!field) return '';

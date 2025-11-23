@@ -1,4 +1,4 @@
-import { useState } from '../hooks.js';
+import { useState } from '../libs/hooks.module.js';
 import { updateWord as updateWordApi } from '../api/wordApi.js';
 
 /**

@@ -8,11 +8,11 @@ const speechRoutes = require('./speech');
 const utilsRoutes = require('./utils');
 const authRoutes = require('./auth');
 
-// Mount routes
-router.use('/', wordsRoutes);
-router.use('/', aiRoutes);
-router.use('/', speechRoutes);
-router.use('/', utilsRoutes);
-router.use('/', authRoutes);
+// Mount routes with proper namespacing
+router.use('/words', wordsRoutes);
+router.use('/ai', aiRoutes);
+router.use('/speech', speechRoutes);
+router.use('/utils', utilsRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;

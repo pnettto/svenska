@@ -1,5 +1,5 @@
 import { html } from '../htm.js';
-import { useState } from '../hooks.js';
+import { useState } from '../libs/hooks.module.js';
 
 export function WordTableModal({ 
   isOpen, 

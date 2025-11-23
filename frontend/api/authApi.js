@@ -4,7 +4,7 @@ import { request } from './request.js';
 
 export async function verifyPin(pin) {
   try {
-    return await request('/api/verify-pin', {
+    return await request('/api/auth', {
       method: 'POST',
       body: JSON.stringify({ pin })
     });
@@ -16,7 +16,7 @@ export async function verifyPin(pin) {
 
 export async function verifyToken(token) {
   try {
-    return await request('/api/verify-token', {
+    return await request('/api/auth/verify-token', {
       method: 'POST',
       body: JSON.stringify({ token })
     });

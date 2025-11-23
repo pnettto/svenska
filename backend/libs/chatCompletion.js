@@ -1,10 +1,11 @@
 const OpenAI = require('openai');
+const config = require('../config');
 
 const PROVIDERS = {
     openai: {
         baseURL: 'https://api.openai.com/v1',
-        defaultModel: 'gpt-4o-mini',
-        apiKeyEnv: 'OPENAI_API_KEY',
+        defaultModel: config.openai.model,
+        apiKey: config.openai.apiKey,
         isOpenAI: true
     },
 };
@@ -21,10 +22,10 @@ async function chatCompletion(options) {
 
     const providerKey = overrideProvider || 'openai';
     const providerConfig = PROVIDERS[providerKey];
-    const apiKey = process.env[providerConfig.apiKeyEnv];
+    const apiKey = providerConfig.apiKey;
     
     if (!apiKey) {
-        throw new Error(`API key not configured: ${providerConfig.apiKeyEnv}`);
+        throw new Error(`API key not configured for provider: ${providerKey}`);
     }
 
     const modelToUse = model || providerConfig.defaultModel;

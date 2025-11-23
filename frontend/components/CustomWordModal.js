@@ -1,5 +1,5 @@
 import { html } from '../htm.js';
-import { useState, useEffect, useRef } from '../hooks.js';
+import { useState, useEffect, useRef } from '../libs/hooks.module.js';
 
 export function CustomWordModal({ 
   isOpen, 

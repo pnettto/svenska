@@ -1,4 +1,5 @@
 const sessionStore = require('../sessionStore');
+const config = require('../config');
 
 // Middleware to check if request has valid session token
 async function requireAuth(req, res, next) {
@@ -34,7 +35,7 @@ async function requireAuth(req, res, next) {
 async function requireAuthOrLimit(req, res, next) {
     const token = req.headers['x-session-token'];
     const interactionCount = parseInt(req.headers['x-interaction-count'] || '0', 10);
-    const MAX_FREE_INTERACTIONS = 5;
+    const MAX_FREE_INTERACTIONS = config.auth.rateLimitMax;
     
     // If they have a token, it MUST be valid
     if (token) {

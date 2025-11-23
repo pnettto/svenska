@@ -1,4 +1,4 @@
-import { useState, useEffect } from '../hooks.js';
+import { useState, useEffect } from '../libs/hooks.module.js';
 import { storage } from '../utils/storage.js';
 import { getAllWords } from '../api/wordApi.js';
 

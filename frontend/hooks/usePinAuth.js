@@ -1,4 +1,4 @@
-import { useState, useEffect } from '../hooks.js';
+import { useState, useEffect } from '../libs/hooks.module.js';
 import { storage } from '../utils/storage.js';
 import { verifyPin as verifyPinApi, verifyToken as verifyTokenApi } from '../api/authApi.js';
 

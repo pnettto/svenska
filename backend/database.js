@@ -87,34 +87,6 @@ const dbOperations = {
             .sort({ read_count: -1 })
             .limit(limit);
     },
-    
-    // Import words from CSV data
-    importFromCSV: async (csvData) => {
-        let imported = 0;
-        let skipped = 0;
-        
-        for (const [original, translation] of csvData) {
-            try {
-                const existing = await db.findOne({ original });
-                if (existing) {
-                    skipped++;
-                } else {
-                    await db.insert({
-                        original,
-                        translation,
-                        examples: [],
-                        read_count: 0,
-                        speech: null
-                    });
-                    imported++;
-                }
-            } catch (error) {
-                throw error;
-            }
-        }
-        
-        return { imported, skipped };
-    }
 };
 
 module.exports = dbOperations;

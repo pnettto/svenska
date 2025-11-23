@@ -1,5 +1,5 @@
 import { html } from '../htm.js';
-import { useState, useRef, useEffect } from '../hooks.js';
+import { useState, useRef, useEffect } from '../libs/hooks.module.js';
 
 export function PinModal({ 
   isOpen, 

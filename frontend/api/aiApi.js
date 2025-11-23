@@ -10,14 +10,14 @@ export async function generateExamples(swedishWord, englishTranslation, existing
     ...(wordId && { wordId })
   };
   
-  return await request('/api/generate-examples', {
+  return await request('/api/ai/generate-examples', {
     method: 'POST',
     body: JSON.stringify(requestBody)
   });
 }
 
 export async function translate(text, sourceLang = 'sv', targetLang = 'en') {
-  const data = await request('/api/translate', {
+  const data = await request('/api/ai/translate', {
     method: 'POST',
     body: JSON.stringify({ text, sourceLang, targetLang })
   });

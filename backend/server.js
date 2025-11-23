@@ -1,10 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
-require('dotenv').config();
+const config = require('./config');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -22,6 +21,6 @@ app.get('/', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Proxy server running on port ${PORT}`);
+app.listen(config.port, () => {
+    console.log(`Server running on port ${config.port}`);
 });

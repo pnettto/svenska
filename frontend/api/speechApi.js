@@ -1,11 +1,11 @@
-import { BASE_URL } from './config.js';
+import { API_BASE_URL } from '../constants.js';
 import { request } from './request.js';
 
 // Speech/audio API functions
 
 export async function generateSpeech(text) {
   try {
-    const result = await request('/api/tts', {
+    const result = await request('/api/speech/tts', {
       method: 'POST',
       body: JSON.stringify({ text }),
       responseType: 'blob'
@@ -24,5 +24,5 @@ export async function generateSpeech(text) {
 }
 
 export function getSpeechUrl(filename) {
-  return `${BASE_URL}/api/speech/${filename}`;
+  return `${API_BASE_URL}/api/speech/${filename}`;
 }

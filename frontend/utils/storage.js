@@ -1,13 +1,11 @@
+import { STORAGE_KEYS, API_BASE_URL } from '../constants.js';
+
 // LocalStorage utility functions
 export const storage = {
-    CACHE_KEY: 'swedishWords',
-    PIN_AUTH_KEY: 'pinAuthenticated',
-    INTERACTION_COUNT_KEY: 'interactionCount',
-
     // Get cached words
     getCachedWords() {
         try {
-            const cached = localStorage.getItem(this.CACHE_KEY);
+            const cached = localStorage.getItem(STORAGE_KEYS.CACHE);
             return cached ? JSON.parse(cached) : null;
         } catch (error) {
             console.error('Error reading cached words:', error);
@@ -18,7 +16,7 @@ export const storage = {
     // Save words to cache
     saveWords(words) {
         try {
-            localStorage.setItem(this.CACHE_KEY, JSON.stringify(words));
+            localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify(words));
         } catch (error) {
             console.error('Error saving words:', error);
         }
@@ -26,19 +24,19 @@ export const storage = {
 
     // Get proxy API URL
     getProxyUrl() {
-        return localStorage.getItem('apiBaseUrl') || 'https://svenska-new-tab-backend.fly.dev';
+        return localStorage.getItem(STORAGE_KEYS.API_BASE_URL) || API_BASE_URL;
     },
 
     // Session Token Methods
     getSessionToken() {
-        return localStorage.getItem(this.PIN_AUTH_KEY);
+        return localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
     },
 
     setSessionToken(token) {
         if (token) {
-            localStorage.setItem(this.PIN_AUTH_KEY, token);
+            localStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, token);
         } else {
-            localStorage.removeItem(this.PIN_AUTH_KEY);
+            localStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN);
         }
     },
 
@@ -47,17 +45,17 @@ export const storage = {
     },
 
     getInteractionCount() {
-        const count = localStorage.getItem(this.INTERACTION_COUNT_KEY);
+        const count = localStorage.getItem(STORAGE_KEYS.INTERACTION_COUNT);
         return count ? parseInt(count, 10) : 0;
     },
 
     incrementInteractionCount() {
         const current = this.getInteractionCount();
-        localStorage.setItem(this.INTERACTION_COUNT_KEY, (current + 1).toString());
+        localStorage.setItem(STORAGE_KEYS.INTERACTION_COUNT, (current + 1).toString());
         return current + 1;
     },
 
     resetInteractionCount() {
-        localStorage.setItem(this.INTERACTION_COUNT_KEY, '0');
+        localStorage.setItem(STORAGE_KEYS.INTERACTION_COUNT, '0');
     }
 };

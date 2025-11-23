@@ -2,11 +2,10 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const sessionStore = require('../sessionStore');
+const config = require('../config');
 
-const SESSION_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-// POST /verify-pin - Verify user PIN and generate session token
-router.post('/verify-pin', async (req, res) => {
+// POST / - Verify user PIN and generate session token
+router.post('/', async (req, res) => {
     try {
         const { pin } = req.body;
         const correctPin = process.env.PIN;
@@ -24,7 +23,7 @@ router.post('/verify-pin', async (req, res) => {
         if (isValid) {
             // Generate secure session token
             const token = crypto.randomBytes(32).toString('hex');
-            const expiresAt = Date.now() + SESSION_EXPIRY;
+            const expiresAt = Date.now() + config.auth.sessionMaxAge;
             
             await sessionStore.create(token, {
                 authenticated: true,

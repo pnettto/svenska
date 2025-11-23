@@ -38,7 +38,7 @@ export async function incrementReadCount(id) {
 
 export async function generateRandomWord() {
   try {
-    return await request('/api/generate-random-word', { method: 'POST' });
+    return await request('/api/ai/generate-random-word', { method: 'POST' });
   } catch (error) {
     console.error('Error generating random word:', error);
     return null;
