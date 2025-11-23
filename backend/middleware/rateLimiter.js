@@ -58,8 +58,20 @@ class RedisStore {
     }
 }
 
+const passDevServer = () => {
+    if (config.isProduction) {  
+        return false;
+    }
+    
+    // In development, bypass rate limiting by calling next middleware immediately
+    return (req, res, next) => {
+        console.log('Rate limiter bypassed for development server');
+        next();
+    };
+};
+
 // Global rate limiter - applies to all API routes
-const globalLimiter = rateLimit({
+const globalLimiter = passDevServer() || rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     standardHeaders: true,
@@ -69,7 +81,7 @@ const globalLimiter = rateLimit({
 });
 
 // Strict limiter for auth endpoints
-const authLimiter = rateLimit({
+const authLimiter = passDevServer() || rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 5, // Limit each IP to 5 auth attempts
     skipSuccessfulRequests: true,
@@ -80,7 +92,7 @@ const authLimiter = rateLimit({
 });
 
 // AI endpoint limiter
-const aiLimiter = rateLimit({
+const aiLimiter = passDevServer() || rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 90, // Limit each IP to 90 AI requests
     standardHeaders: true,
@@ -90,7 +102,7 @@ const aiLimiter = rateLimit({
 });
 
 // Speed limiter - slows down requests instead of blocking
-const speedLimiter = slowDown({
+const speedLimiter = passDevServer() || slowDown({
     windowMs: 15 * 60 * 1000,
     delayAfter: 50,
     delayMs: (hits) => hits * 100,

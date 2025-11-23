@@ -111,13 +111,17 @@ async function requireAuthOrLimit(req, res, next) {
         
         // Check if they've exceeded the limit
         if (interactionCount >= MAX_FREE_INTERACTIONS) {
-            console.log('Rate Limit - BLOCKED');
-            return res.status(401).json({ 
-                error: 'Authentication required after free interactions',
-                code: 'LIMIT_EXCEEDED',
-                interactionCount: interactionCount,
-                maxFree: MAX_FREE_INTERACTIONS
-            });
+            if (!config.isProduction) {
+                console.log('Rate limiter bypassed for development server');
+            } else {
+                console.log('Rate Limit - BLOCKED');
+                return res.status(401).json({ 
+                    error: 'Authentication required after free interactions',
+                    code: 'LIMIT_EXCEEDED',
+                    interactionCount: interactionCount,
+                    maxFree: MAX_FREE_INTERACTIONS
+                });
+            }
         }
         
         // Increment counter and allow request
