@@ -1,16 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const OpenAI = require('openai');
 const prompts = require('../prompts');
 const db = require('../database');
 const { requireAuthOrLimit } = require('../middleware/auth');
+const { chatCompletion } = require('../libs/chatCompletion');
 require('dotenv').config();
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
-
-// POST /generate-examples - Generate example sentences using OpenAI
+// POST /generate-examples - Generate example sentences using AI
 router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
     const { swedishWord, englishTranslation, existingExamples, wordId } = req.body;
     
@@ -18,25 +14,19 @@ router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
-    
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+        const response = await chatCompletion({
             messages: [
                 { role: 'system', content: prompts.exampleGeneration.system },
                 { role: 'user', content: prompts.exampleGeneration.user(swedishWord, englishTranslation, existingExamples) }
             ],
             temperature: 0.4,
             max_tokens: 300,
-            response_format: { type: "json_object" },
-            store: true
+            response_format: { type: "json_object" }
         });
         
         // Parse examples from response
-        const content = completion.choices[0].message.content;
+        const content = response.content;
         const jsonMatch = content.match(/\[[\s\S]*\]/) || [content];
         const examples = JSON.parse(jsonMatch[0]);
         
@@ -51,22 +41,19 @@ router.post('/generate-examples', requireAuthOrLimit, async (req, res) => {
         
         res.json({ examples });
     } catch (error) {
+        console.error('Generate examples error:', error);
         res.status(500).json({ error: 'Failed to generate examples' });
     }
 });
 
-// POST /translate - Translate text using OpenAI
+// POST /translate - Translate text using AI
 router.post('/translate', requireAuthOrLimit, async (req, res) => {
     const { text, sourceLang = 'sv', targetLang = 'en' } = req.body;
     
     if (!text) return res.status(400).json({ error: 'Missing required field: text' });
-    if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
     
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+        const response = await chatCompletion({
             messages: [
                 { role: 'system', content: prompts.translation.system },
                 { role: 'user', content: prompts.translation.user(text, sourceLang, targetLang) }
@@ -75,21 +62,17 @@ router.post('/translate', requireAuthOrLimit, async (req, res) => {
             max_tokens: 500
         });
         
-        res.json({ translation: completion.choices[0].message.content.trim() });
+        res.json({ translation: response.content.trim() });
     } catch (error) {
+        console.error('Translation error:', error);
         res.status(500).json({ error: 'Translation failed' });
     }
 });
 
-// POST /generate-random-word - Generate a random Swedish word using OpenAI
+// POST /generate-random-word - Generate a random Swedish word using AI
 router.post('/generate-random-word', requireAuthOrLimit, async (req, res) => {
-    if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
-    
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+        const response = await chatCompletion({
             messages: [
                 { role: 'system', content: prompts.randomWord.system },
                 { role: 'user', content: prompts.randomWord.user() }
@@ -99,9 +82,10 @@ router.post('/generate-random-word', requireAuthOrLimit, async (req, res) => {
             response_format: { type: "json_object" }
         });
         
-        const result = JSON.parse(completion.choices[0].message.content);
+        const result = JSON.parse(response.content);
         res.json(result);
     } catch (error) {
+        console.error('Generate random word error:', error);
         res.status(500).json({ error: 'Failed to generate random word' });
     }
 });
