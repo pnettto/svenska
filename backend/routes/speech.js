@@ -6,10 +6,10 @@ const validation = require('../middleware/validation');
 // POST /tts - Text-to-Speech using Amazon Polly with caching
 router.post('/tts', validation.speech.tts, async (req, res) => {
     const { text } = req.body;
-    
+
     try {
         const result = await speechService.synthesize(text);
-        
+
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('X-Cache', result.cached ? 'HIT' : 'MISS');
         res.setHeader('X-Speech-File', result.filename);
@@ -24,11 +24,11 @@ router.post('/tts', validation.speech.tts, async (req, res) => {
 // GET /:filename - Serve cached speech audio by filename
 router.get('/:filename', validation.speech.getFile, (req, res) => {
     const { filename } = req.params;
-    
+
     if (!speechService.isCached(filename)) {
         return res.status(404).json({ error: 'Speech file not found' });
     }
-    
+
     try {
         const audioBuffer = speechService.readCached(filename);
         res.setHeader('Content-Type', 'audio/mpeg');

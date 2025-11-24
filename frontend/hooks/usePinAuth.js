@@ -10,66 +10,44 @@ export function usePinAuth() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [pinError, setPinError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [interactionCount, setInteractionCount] = useState(0);
-
-  const MAX_FREE_INTERACTIONS = 3;
 
   // Initialize authentication state on mount
   useEffect(() => {
     const initAuth = async () => {
       const token = storage.getSessionToken();
-      const count = storage.getInteractionCount();
-      
-      setInteractionCount(count);
-      
+
       if (token) {
         // Verify token with backend
         const result = await verifyTokenApi(token);
         if (result.valid) {
           setIsAuthenticated(true);
         } else {
-          // Invalid token, clear it
+          // Invalid token, clear it and show modal
           storage.setSessionToken(null);
           setIsAuthenticated(false);
-          
-          // If they've exceeded free interactions, show PIN modal
-          if (count >= MAX_FREE_INTERACTIONS) {
-            setPinModalOpen(true);
-          }
+          setPinModalOpen(true);
         }
       } else {
         setIsAuthenticated(false);
-        
-        // If they've exceeded free interactions and no token, show PIN modal
-        if (count >= MAX_FREE_INTERACTIONS) {
-          setPinModalOpen(true);
-        }
+        setPinModalOpen(true);
       }
     };
-    
+
     initAuth();
   }, []);
 
   // Check if user should be blocked
   const shouldBlock = () => {
-    return !isAuthenticated && interactionCount >= MAX_FREE_INTERACTIONS;
+    return !isAuthenticated;
   };
 
   // Record an interaction (called when user performs an action)
   const recordInteraction = () => {
     if (isAuthenticated) {
-      return true; // Authenticated users have unlimited interactions
+      return true;
     }
-
-    const newCount = storage.incrementInteractionCount();
-    setInteractionCount(newCount);
-
-    if (newCount >= MAX_FREE_INTERACTIONS) {
-      setPinModalOpen(true);
-      return false; // Block the action
-    }
-
-    return true; // Allow the action
+    setPinModalOpen(true);
+    return false;
   };
 
   // Handle auth errors from API
@@ -91,7 +69,7 @@ export function usePinAuth() {
 
     try {
       const result = await verifyPinApi(pin);
-      
+
       if (result.valid && result.token) {
         storage.setSessionToken(result.token);
         setIsAuthenticated(true);
@@ -113,10 +91,8 @@ export function usePinAuth() {
   // For testing/development: reset authentication
   const resetAuth = () => {
     storage.setSessionToken(null);
-    storage.resetInteractionCount();
     setIsAuthenticated(false);
-    setInteractionCount(0);
-    setPinModalOpen(false);
+    setPinModalOpen(true);
   };
 
   return {
@@ -125,8 +101,6 @@ export function usePinAuth() {
     isVerifying,
     pinError,
     isAuthenticated,
-    interactionCount,
-    remainingInteractions: Math.max(0, MAX_FREE_INTERACTIONS - interactionCount),
     shouldBlock: shouldBlock(),
     recordInteraction,
     verifyPin,

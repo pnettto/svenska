@@ -10,10 +10,6 @@ export function getHeaders(includeAuth = true) {
       headers['x-session-token'] = token;
       headers['Authorization'] = `Bearer ${token}`;
     }
-
-    // Also send interaction count for rate limiting
-    const count = localStorage.getItem(STORAGE_KEYS.INTERACTION_COUNT) || '0';
-    headers['x-interaction-count'] = count;
   }
 
   return headers;

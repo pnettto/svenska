@@ -1,8 +1,8 @@
 import { html } from '../htm.js';
 import { useState, useRef, useEffect } from '../libs/hooks.module.js';
 
-export function PinModal({ 
-  isOpen, 
+export function PinModal({
+  isOpen,
   onVerify,
   isVerifying,
   error
@@ -35,7 +35,7 @@ export function PinModal({
       <div class="modal-content pin-modal-content">
         <h2>🔒 PIN Required</h2>
         <p class="pin-message">
-          You've used your free interactions. Please enter the PIN to continue using the app.
+          Please enter the PIN to continue using the app.
         </p>
         <div class="input-group">
           <label for="pin">PIN:</label>
