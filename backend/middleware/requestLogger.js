@@ -1,11 +1,7 @@
-const MASK_LENGTH = 6;
-
 function maskToken(token = '') {
-    if (token.length <= MASK_LENGTH * 2) {
-        return token;
-    }
-    const start = token.slice(0, MASK_LENGTH);
-    const end = token.slice(-MASK_LENGTH);
+    const maskLength = 6;
+    const start = token.slice(0, maskLength);
+    const end = token.slice(-maskLength);
     return `${start}...${end}`;
 }
 
