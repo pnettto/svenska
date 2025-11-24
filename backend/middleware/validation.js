@@ -174,7 +174,7 @@ const validation = {
                 .trim()
                 .isLength({ min: 1, max: 200 })
                 .withMessage('Token is required')
-                .matches(/^[a-f0-9]+$/)
+                .matches(/^[A-Za-z0-9\-\._]+$/)
                 .withMessage('Invalid token format'),
             handleValidationErrors
         ]
