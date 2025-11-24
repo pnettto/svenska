@@ -1,5 +1,6 @@
 import { html } from '../htm.js';
 import { useState } from '../libs/hooks.module.js';
+import { utilsApi } from '../api/index.js';
 
 export function WordTableModal({ 
   isOpen, 
@@ -44,6 +45,28 @@ export function WordTableModal({
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const { blob, filename } = await utilsApi.exportWords();
+      
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export words:', error);
+      alert('Misslyckades att exportera ord');
+    }
+  };
+
   if (!isOpen) return null;
 
   // Filter and sort words
@@ -83,8 +106,16 @@ export function WordTableModal({
           <button 
             class="btn-toggle-translations" 
             onClick=${() => setShowTranslations(!showTranslations)}
+            title="Visa/dölj översättningar"
           >
             ${showTranslations ? '🙈' : '👁️'}
+          </button>
+          <button 
+            class="btn-export-words" 
+            onClick=${handleExport}
+            title="Exportera ord till CSV"
+          >
+            💾
           </button>
         </div>
 

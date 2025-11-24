@@ -678,6 +678,24 @@ body {
     transform: translateY(-2px);
 }
 
+.btn-export-words {
+    padding: 12px 20px;
+    border: 2px solid #404040;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-export-words:hover {
+    background: #404040;
+    transform: translateY(-2px);
+}
+
 .word-table-container {
     flex: 1;
     overflow-y: auto;
