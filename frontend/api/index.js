@@ -1,4 +1,6 @@
-export * as wordApi from './wordApi.js';
-export * as authApi from './authApi.js';
-export * as speechApi from './speechApi.js';
-export * as utilsApi from './utilsApi.js';
+import * as wordApi from './wordApi.js';
+import * as authApi from './authApi.js';
+import * as speechApi from './speechApi.js';
+import * as utilsApi from './utilsApi.js';
+
+export { wordApi, authApi, speechApi, utilsApi };
