@@ -74,4 +74,9 @@ router.post('/verify-token', authLimiter, async (req, res) => {
     }
 });
 
+// POST /logout - Logout endpoint (token cleared client-side)
+router.post('/logout', (req, res) => {
+    res.json({ success: true });
+});
+
 module.exports = router;

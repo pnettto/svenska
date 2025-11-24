@@ -1,16 +1,17 @@
 import { API_BASE_URL, STORAGE_KEYS } from '../constants.js';
+import { storage } from '../utils/storage.js';
 
 // Get headers with session token if available
 export function getHeaders(includeAuth = true) {
   const headers = { 'Content-Type': 'application/json' };
-
+  
   if (includeAuth) {
-    const token = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
-    if (token && token !== 'true' && token !== 'false') {
+    const token = storage.getSessionToken();
+    if (token && token !== 'authenticated') {
       headers['Authorization'] = `Bearer ${token}`;
     }
   }
-
+  
   return headers;
 }
 

@@ -24,3 +24,14 @@ export async function verifyToken() {
     return { valid: false };
   }
 }
+
+export async function logout() {
+  try {
+    return await request('/api/auth/logout', {
+      method: 'POST'
+    });
+  } catch (error) {
+    console.error('Error logging out:', error);
+    return { success: false };
+  }
+}
