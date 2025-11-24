@@ -1,68 +1,12 @@
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
-const { Redis } = require('@upstash/redis')
 const config = require('../config');
 
-// Redis-backed rate limit store
-class RedisStore {
-    constructor(options = {}) {
-        this.prefix = options.prefix || 'rl:';
-        this.client = null;
-        this.windowMs = options.windowMs || 60000;
-        this.initClient();
-    }
-
-    initClient() {
-        try {
-            this.client = new Redis({
-                url: config.redis.url,
-                token: config.redis.token
-            });
-        } catch (error) {
-            console.error('Redis rate limiter connection error:', error);
-        }
-    }
-
-    async increment(key) {
-        if (!this.client) {
-            // Fallback to in-memory if Redis unavailable
-            return { totalHits: 0, resetTime: new Date(Date.now() + this.windowMs) };
-        }
-
-        const fullKey = `${this.prefix}${key}`;
-        const current = await this.client.incr(fullKey);
-
-        if (current === 1) {
-            await this.client.expire(fullKey, Math.ceil(this.windowMs / 1000));
-        }
-
-        const ttl = await this.client.ttl(fullKey);
-        const resetTime = new Date(Date.now() + (ttl * 1000));
-
-        return {
-            totalHits: current,
-            resetTime
-        };
-    }
-
-    async decrement(key) {
-        if (!this.client) return;
-        const fullKey = `${this.prefix}${key}`;
-        await this.client.decr(fullKey);
-    }
-
-    async resetKey(key) {
-        if (!this.client) return;
-        const fullKey = `${this.prefix}${key}`;
-        await this.client.del(fullKey);
-    }
-}
-
 const passDevServer = () => {
-    if (config.isProduction) {  
+    if (config.isProduction) {
         return false;
     }
-    
+
     // In development, bypass rate limiting by calling next middleware immediately
     return (req, res, next) => {
         console.log('Rate limiter bypassed for development server');
@@ -77,7 +21,7 @@ const globalLimiter = passDevServer() || rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many requests from this IP, please try again later',
-    store: new RedisStore({ prefix: 'rl:global:', windowMs: 15 * 60 * 1000 })
+    // Default store is MemoryStore, which is what we want now
 });
 
 // Strict limiter for auth endpoints
@@ -88,7 +32,6 @@ const authLimiter = passDevServer() || rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many authentication attempts, please try again later',
-    store: new RedisStore({ prefix: 'rl:auth:', windowMs: 15 * 60 * 1000 })
 });
 
 // AI endpoint limiter
@@ -98,7 +41,6 @@ const aiLimiter = passDevServer() || rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many AI requests, please try again later',
-    store: new RedisStore({ prefix: 'rl:ai:', windowMs: 15 * 60 * 1000 })
 });
 
 // Speed limiter - slows down requests instead of blocking
@@ -113,6 +55,5 @@ module.exports = {
     globalLimiter,
     authLimiter,
     aiLimiter,
-    speedLimiter,
-    RedisStore
+    speedLimiter
 };

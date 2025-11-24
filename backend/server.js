@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const routes = require('./routes');
 const config = require('./config');
-const sessionStore = require('./redisSessionStore');
+const { getIronSession } = require('iron-session');
 const { globalLimiter, speedLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -43,10 +43,10 @@ const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, Postman, etc.)
         if (!origin) return callback(null, true);
-        
+
         // Trim whitespace from allowed origins
         const allowedOrigins = config.cors.allowedOrigins.map(o => o.trim());
-        if (allowedOrigins.includes(origin) || 
+        if (allowedOrigins.includes(origin) ||
             origin.startsWith('chrome-extension://')) {
             callback(null, true);
         } else {
@@ -63,6 +63,17 @@ app.use(cors(corsOptions));
 // Security: Request size limit
 app.use(express.json({ limit: config.security.requestSizeLimit }));
 
+// Session Middleware
+app.use(async (req, res, next) => {
+    try {
+        req.session = await getIronSession(req, res, config.ironSession);
+        next();
+    } catch (error) {
+        console.error('Session error:', error);
+        next(error);
+    }
+});
+
 // Security: Rate limiting
 app.use('/api', speedLimiter);
 app.use('/api', globalLimiter);
@@ -72,10 +83,9 @@ app.use('/api', routes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
-    const redisHealthy = await sessionStore.ping();
-    res.json({ 
+    res.json({
         status: 'ok',
-        redis: redisHealthy ? 'connected' : 'disconnected',
+        session: req.session ? 'active' : 'inactive',
         timestamp: new Date().toISOString()
     });
 });
@@ -88,38 +98,26 @@ app.get('/', (req, res) => {
 // Security: Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
-    
+
     // Don't leak error details in production
-    const message = config.isProduction 
-        ? 'Internal server error' 
+    const message = config.isProduction
+        ? 'Internal server error'
         : err.message;
-    
-    res.status(err.status || 500).json({ 
+
+    res.status(err.status || 500).json({
         error: message,
         ...(config.isProduction ? {} : { stack: err.stack })
     });
 });
 
-// Initialize Redis connection
-sessionStore.connect()
-    .then(() => {
-        console.log('Session store initialized');
-    })
-    .catch((error) => {
-        console.error('Failed to initialize session store:', error);
-        console.error('Server will continue but sessions may not work properly');
-    });
-
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down gracefully');
-    await sessionStore.disconnect();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('SIGINT received, shutting down gracefully');
-    await sessionStore.disconnect();
     process.exit(0);
 });
 

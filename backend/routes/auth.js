@@ -3,7 +3,6 @@ const config = require('../config');
 const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
-const sessionStore = require('../redisSessionStore');
 const validation = require('../middleware/validation');
 
 // POST / - Verify user PIN and generate session token
@@ -11,33 +10,36 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
     try {
         const { pin } = req.body;
         const correctPin = config.auth.pin;
-        
+
         if (!correctPin) {
             return res.status(500).json({ error: 'PIN not configured on server' });
         }
-        
+
         // Security: Use constant-time comparison to prevent timing attacks
         const pinBuffer = Buffer.from(pin);
         const correctPinBuffer = Buffer.from(correctPin);
-        
+
         // Ensure buffers are same length for timing-safe comparison
         let isValid = false;
         if (pinBuffer.length === correctPinBuffer.length) {
             isValid = crypto.timingSafeEqual(pinBuffer, correctPinBuffer);
         }
-        
+
         if (isValid) {
-            // Generate secure session token
+            // Generate secure session token (kept for frontend compatibility)
             const token = crypto.randomBytes(32).toString('hex');
             const expiresAt = Date.now() + config.auth.sessionMaxAge;
-            
-            await sessionStore.create(token, {
+
+            // Save session in cookie
+            req.session.user = {
                 authenticated: true,
-                expiresAt
-            });
-            
-            res.json({ 
-                valid: true, 
+                expiresAt,
+                token // Optional: store token if needed for other things
+            };
+            await req.session.save();
+
+            res.json({
+                valid: true,
                 token,
                 expiresAt
             });
@@ -55,17 +57,22 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
 // POST /verify-token - Verify session token
 router.post('/verify-token', authLimiter, validation.auth.verifyToken, async (req, res) => {
     try {
-        const { token } = req.body;
-        
-        const session = await sessionStore.get(token);
-        
-        if (!session) {
+        // We don't strictly need the token from body anymore since we use cookies,
+        // but we can check if the user is authenticated via session.
+
+        if (!req.session.user || !req.session.user.authenticated) {
             return res.status(200).json({ valid: false });
         }
-        
-        res.json({ 
-            valid: session.authenticated,
-            expiresAt: session.expiresAt
+
+        // Check expiration
+        if (req.session.user.expiresAt && req.session.user.expiresAt < Date.now()) {
+            req.session.destroy();
+            return res.status(200).json({ valid: false });
+        }
+
+        res.json({
+            valid: true,
+            expiresAt: req.session.user.expiresAt
         });
     } catch (error) {
         console.error('Error verifying token:', error);

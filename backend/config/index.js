@@ -12,10 +12,17 @@ module.exports = {
         path: process.env.FLY_APP_NAME ? '/data/words.db' : 'data/words.db'
     },
 
-    // Redis
-    redis: {
-        url: process.env.REDIS_URL || 'redis://localhost:6379',
-        token: process.env.REDIS_TOKEN
+    // Iron Session
+    ironSession: {
+        cookieName: 'svenska_session',
+        password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
+        // secure: true should be used in production (HTTPS) but can be false in dev
+        cookieOptions: {
+            secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development', // Always secure for SameSite=None
+            sameSite: 'none', // Required for cross-origin (extension)
+            httpOnly: true,
+        },
+        ttl: 24 * 60 * 60 // 24 hours in seconds
     },
 
     // Speech/Audio
