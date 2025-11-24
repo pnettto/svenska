@@ -9,7 +9,7 @@ const passDevServer = () => {
 
     // In development, bypass rate limiting by calling next middleware immediately
     return (req, res, next) => {
-        console.log('Rate limiter bypassed for development server');
+        // By pass rate limiter for development server
         next();
     };
 };

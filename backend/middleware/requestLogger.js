@@ -1,3 +1,5 @@
+const config = require('../config');
+
 function maskToken(token = '') {
     const maskLength = 6;
     const start = token.slice(0, maskLength);
@@ -17,6 +19,11 @@ function formatUser(user) {
 }
 
 function requestLogger(req, res, next) {
+    if (!config.isProduction) {
+        // By pass request logger for development server
+        return next();
+    }
+
     const start = process.hrtime.bigint();
 
     res.on('finish', () => {
