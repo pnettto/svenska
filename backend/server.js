@@ -55,7 +55,8 @@ const corsOptions = {
         }
     },
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token', 'x-interaction-count']
 };
 app.use(cors(corsOptions));
 

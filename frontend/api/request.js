@@ -3,18 +3,19 @@ import { API_BASE_URL, STORAGE_KEYS } from '../constants.js';
 // Get headers with session token if available
 export function getHeaders(includeAuth = true) {
   const headers = { 'Content-Type': 'application/json' };
-  
+
   if (includeAuth) {
     const token = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
     if (token && token !== 'true' && token !== 'false') {
       headers['x-session-token'] = token;
+      headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     // Also send interaction count for rate limiting
     const count = localStorage.getItem(STORAGE_KEYS.INTERACTION_COUNT) || '0';
     headers['x-interaction-count'] = count;
   }
-  
+
   return headers;
 }
 
@@ -26,28 +27,28 @@ export async function request(endpoint, options = {}) {
       ...getHeaders(),
       ...(options.headers || {})
     };
-    
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers
     });
-    
+
     // Handle authentication errors
     if (response.status === 401) {
       const data = await response.json().catch(() => ({}));
       throw { authError: true, code: data.code, message: data.error };
     }
-    
+
     // Handle 204 No Content
     if (response.status === 204) {
       return true;
     }
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `API error: ${response.status}`);
     }
-    
+
     // Handle blob responses (for audio, images, etc.)
     if (options.responseType === 'blob') {
       return {
@@ -55,7 +56,7 @@ export async function request(endpoint, options = {}) {
         headers: response.headers
       };
     }
-    
+
     return options.method === 'DELETE' ? true : await response.json();
   } catch (error) {
     console.error(`Error with ${endpoint}:`, error);
