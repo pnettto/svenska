@@ -13,15 +13,16 @@ router.post('/generate-examples', aiLimiter, validation.ai.generateExamples, asy
         const examples = await aiService.generateExamples(swedishWord, englishTranslation, existingExamples);
         
         // Save examples to database if wordId provided
+        let updatedWord = null;
         if (wordId) {
             const word = await wordService.getWordById(wordId);
             if (word) {
-                const allExamples = [...(existingExamples || []), ...examples];
-                await wordService.updateWord(wordId, word.original, word.translation, allExamples, word.speech);
+                const allExamples = [...examples, ...(existingExamples || [])];
+                updatedWord = await wordService.updateWord(wordId, word.original, word.translation, allExamples, word.speech);
             }
         }
         
-        res.json({ examples });
+        res.json({ examples, word: updatedWord });
     } catch (error) {
         console.error('Generate examples error:', error);
         res.status(500).json({ error: 'Failed to generate examples' });

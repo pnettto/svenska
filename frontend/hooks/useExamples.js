@@ -50,14 +50,10 @@ export function useExamples() {
       setExamples(updatedExamples);
       setShowExamples(true);
       
-      // Update word in database
-      if (word._id) {
-        await updateWord(word._id, word.original, word.translation, updatedExamples);
-      }
-      
-      // Update history
-      if (onUpdate) {
-        onUpdate(updatedExamples);
+      // The backend already saves examples to the database when wordId is provided
+      // Update history with the updated word from the backend response
+      if (onUpdate && data.word) {
+        onUpdate(data.word.examples);
       }
       
       examplesService.preloadAudio(data.examples, proxyUrl);
