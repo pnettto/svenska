@@ -15,7 +15,7 @@ module.exports = {
     // Iron Session
     ironSession: {
         cookieName: 'svenska_session',
-        password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
+        password: process.env.SESSION_SECRET,
         // secure: true should be used in production (HTTPS) but can be false in dev
         cookieOptions: {
             secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development', // Always secure for SameSite=None
@@ -48,7 +48,7 @@ module.exports = {
     // Auth
     auth: {
         pin: process.env.PIN,
-        sessionSecret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+        sessionSecret: process.env.SESSION_SECRET,
         sessionMaxAge: 24 * 60 * 60 * 1000 // 24 hours
     },
 
