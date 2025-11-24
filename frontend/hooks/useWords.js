@@ -15,33 +15,49 @@ function shuffle(array) {
 /**
  * Manages word shuffling and fetching
  */
-export function useWords() {
+export function useWords({ fetchEnabled = true } = {}) {
   const [shuffledWords, setShuffledWords] = useState([]);
   const [shuffledIndex, setShuffledIndex] = useState(0);
 
-  useEffect(() => {
-    const initializeWords = (words) => {
-      const shuffled = shuffle(words);
-      setShuffledWords(shuffled);
-      setShuffledIndex(1);
-      return shuffled[0];
-    };
+  const initializeWords = (words) => {
+    const shuffled = shuffle(words);
+    setShuffledWords(shuffled);
+    setShuffledIndex(1);
+    return shuffled[0];
+  };
 
-    // Try cached words first
+  useEffect(() => {
     const cachedWords = storage.getCachedWords();
     if (cachedWords?.length > 0) {
       initializeWords(cachedWords);
     }
-
-    // Fetch fresh words in background
-    getAllWords().then(freshWords => {
-      if (freshWords?.length > 0) {
-        storage.saveWords(freshWords);
-        // Update working words in case there has been changes
-        initializeWords(freshWords);
-      }
-    });
   }, []);
+
+  useEffect(() => {
+    if (!fetchEnabled) return;
+
+    let cancelled = false;
+
+    const fetchWords = async () => {
+      try {
+        const freshWords = await getAllWords();
+        if (!cancelled && freshWords?.length > 0) {
+          storage.saveWords(freshWords);
+          initializeWords(freshWords);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error fetching words:', error);
+        }
+      }
+    };
+
+    fetchWords();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchEnabled]);
 
   const getNextWord = () => {
     if (shuffledIndex < shuffledWords.length) {

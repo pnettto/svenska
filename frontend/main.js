@@ -19,13 +19,13 @@ import { useAppHandlers } from './hooks/useAppHandlers.js';
  */
 function App() {
   // Custom hooks for feature separation
-  const words = useWords();
+  const pinAuth = usePinAuth();
+  const words = useWords({ fetchEnabled: pinAuth.isAuthenticated });
   const navigation = useWordNavigation();
   const examples = useExamples();
   const customWord = useCustomWord();
   const editWord = useEditWord();
   const interaction = useWordInteraction();
-  const pinAuth = usePinAuth();
   const [wordTableOpen, setWordTableOpen] = useState(false);
 
   // Get all event handlers
