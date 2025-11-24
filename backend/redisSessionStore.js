@@ -25,7 +25,6 @@ class RedisSessionStore {
 
     async disconnect() {
         if (this.client) {
-            await this.client.quit();
             this.isConnected = false;
         }
     }

@@ -46,7 +46,6 @@ const corsOptions = {
         
         // Trim whitespace from allowed origins
         const allowedOrigins = config.cors.allowedOrigins.map(o => o.trim());
-        
         if (allowedOrigins.includes(origin) || 
             origin.startsWith('chrome-extension://')) {
             callback(null, true);
