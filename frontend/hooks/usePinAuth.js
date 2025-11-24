@@ -50,41 +50,6 @@ export function usePinAuth() {
     initAuth();
   }, []);
 
-  // Periodically validate session token
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const validateSession = async () => {
-      const token = storage.getSessionToken();
-      if (!token) {
-        setIsAuthenticated(false);
-        const count = storage.getInteractionCount();
-        if (count >= MAX_FREE_INTERACTIONS) {
-          setPinModalOpen(true);
-        }
-        return;
-      }
-
-      const result = await verifyTokenApi(token);
-      if (!result.valid) {
-        storage.setSessionToken(null);
-        setIsAuthenticated(false);
-        const count = storage.getInteractionCount();
-        if (count >= MAX_FREE_INTERACTIONS) {
-          setPinModalOpen(true);
-        }
-      }
-    };
-
-    // Validate immediately
-    validateSession();
-
-    // Then validate every 30 seconds
-    const interval = setInterval(validateSession, 30000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
   // Check if user should be blocked
   const shouldBlock = () => {
     return !isAuthenticated && interactionCount >= MAX_FREE_INTERACTIONS;
