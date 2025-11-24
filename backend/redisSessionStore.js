@@ -47,7 +47,7 @@ class RedisSessionStore {
         if (ttl > 0) {
             await this.client.set(
                 `session:${token}`,
-                JSON.stringify(session),
+                session,
                 { ex: ttl }
             );
         }
@@ -61,13 +61,11 @@ class RedisSessionStore {
             await this.connect();
         }
 
-        const data = await this.client.get(`session:${token}`);
+        const session = await this.client.get(`session:${token}`);
         
-        if (!data) {
+        if (!session) {
             return null;
         }
-
-        const session = JSON.parse(data);
 
         // Double-check expiration
         if (session.expiresAt < Date.now()) {

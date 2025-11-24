@@ -12,6 +12,11 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
         const { pin } = req.body;
         const correctPin = config.auth.pin;
         
+        // Debug logging
+        console.log('PIN verification attempt:');
+        console.log('  Received PIN:', pin, 'Type:', typeof pin, 'Length:', pin?.length);
+        console.log('  Correct PIN:', correctPin, 'Type:', typeof correctPin, 'Length:', correctPin?.length);
+        
         if (!correctPin) {
             return res.status(500).json({ error: 'PIN not configured on server' });
         }
