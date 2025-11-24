@@ -13,7 +13,7 @@ const { requireAuth } = require('../middleware/auth');
 // Mount routes with proper namespacing
 router.use('/words', requireAuth, wordsRoutes);
 router.use('/ai', requireAuth, aiRoutes);
-router.use('/speech', requireAuth, speechRoutes);
+router.use('/speech', speechRoutes); // Public access for audio files
 router.use('/utils', utilsRoutes);
 router.use('/auth', authRoutes);
 

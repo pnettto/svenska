@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const speechService = require('../services/speechService');
 const validation = require('../middleware/validation');
+const { requireAuth } = require('../middleware/auth');
 
 // POST /tts - Text-to-Speech using Amazon Polly with caching
-router.post('/tts', validation.speech.tts, async (req, res) => {
+router.post('/tts', requireAuth, validation.speech.tts, async (req, res) => {
     const { text } = req.body;
 
     try {
