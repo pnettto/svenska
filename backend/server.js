@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const routes = require('./routes');
 const config = require('./config');
 const { globalLimiter, speedLimiter } = require('./middleware/rateLimiter');
+const requestLogger = require('./middleware/requestLogger');
 
 const app = express();
 
@@ -65,6 +66,9 @@ app.use(express.json({ limit: config.security.requestSizeLimit }));
 // Security: Rate limiting
 app.use('/api', speedLimiter);
 app.use('/api', globalLimiter);
+
+// Observability: log every API request with user details (if any)
+app.use('/api', requestLogger);
 
 // Mount all API routes
 app.use('/api', routes);
