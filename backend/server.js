@@ -3,7 +3,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const routes = require('./routes');
 const config = require('./config');
-const { getIronSession } = require('iron-session');
 const { globalLimiter, speedLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -56,23 +55,12 @@ const corsOptions = {
     },
     credentials: true,
     optionsSuccessStatus: 200,
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token', 'x-interaction-count']
+    allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 
 // Security: Request size limit
 app.use(express.json({ limit: config.security.requestSizeLimit }));
-
-// Session Middleware
-app.use(async (req, res, next) => {
-    try {
-        req.session = await getIronSession(req, res, config.ironSession);
-        next();
-    } catch (error) {
-        console.error('Session error:', error);
-        next(error);
-    }
-});
 
 // Security: Rate limiting
 app.use('/api', speedLimiter);
@@ -85,7 +73,6 @@ app.use('/api', routes);
 app.get('/health', async (req, res) => {
     res.json({
         status: 'ok',
-        session: req.session ? 'active' : 'inactive',
         timestamp: new Date().toISOString()
     });
 });

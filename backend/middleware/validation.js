@@ -169,15 +169,6 @@ const validation = {
                 .withMessage('PIN must contain only numbers'),
             handleValidationErrors
         ],
-        verifyToken: [
-            body('token')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Token is required')
-                .matches(/^[A-Za-z0-9\-\._]+$/)
-                .withMessage('Invalid token format'),
-            handleValidationErrors
-        ]
     },
 
     // Speech validation

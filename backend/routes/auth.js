@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const validation = require('../middleware/validation');
 const { generateToken, verifyToken } = require('../libs/token');
+const { extractToken } = require('../middleware/auth');
 
 // POST / - Verify user PIN and generate session token
 router.post('/', authLimiter, validation.auth.login, async (req, res) => {
@@ -34,14 +35,6 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
                 expiresAt
             });
 
-            // Save session in cookie
-            req.session.user = {
-                authenticated: true,
-                expiresAt,
-                token // Optional: store token if needed for other things
-            };
-            await req.session.save();
-
             res.json({
                 valid: true,
                 token,
@@ -58,40 +51,18 @@ router.post('/', authLimiter, validation.auth.login, async (req, res) => {
     }
 });
 
-// POST /verify-token - Verify session token
-router.post('/verify-token', authLimiter, validation.auth.verifyToken, async (req, res) => {
+// POST /verify-token - Verify bearer token
+router.post('/verify-token', authLimiter, async (req, res) => {
     try {
-        const bodyToken = req.body?.token;
-        const now = Date.now();
-
-        if (req.session.user && req.session.user.authenticated) {
-            if (req.session.user.expiresAt && req.session.user.expiresAt < now) {
-                await req.session.destroy();
-                return res.status(200).json({ valid: false });
-            }
-
-            return res.json({
-                valid: true,
-                expiresAt: req.session.user.expiresAt
-            });
-        }
-
-        if (!bodyToken) {
+        const token = extractToken(req);
+        if (!token) {
             return res.status(200).json({ valid: false });
         }
 
-        const payload = verifyToken(bodyToken);
-        if (!payload || payload.expiresAt < now) {
+        const payload = verifyToken(token);
+        if (!payload || !payload.expiresAt || payload.expiresAt < Date.now()) {
             return res.status(200).json({ valid: false });
         }
-
-        // Rehydrate the HTTP session so subsequent requests succeed
-        req.session.user = {
-            authenticated: true,
-            expiresAt: payload.expiresAt,
-            token: bodyToken
-        };
-        await req.session.save();
 
         res.json({
             valid: true,

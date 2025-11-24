@@ -12,19 +12,6 @@ module.exports = {
         path: process.env.FLY_APP_NAME ? '/data/words.db' : 'data/words.db'
     },
 
-    // Iron Session
-    ironSession: {
-        cookieName: 'svenska_session',
-        password: process.env.SESSION_SECRET,
-        // secure: true should be used in production (HTTPS) but can be false in dev
-        cookieOptions: {
-            secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development', // Always secure for SameSite=None
-            sameSite: 'none', // Required for cross-origin (extension)
-            httpOnly: true,
-        },
-        ttl: 24 * 60 * 60 // 24 hours in seconds
-    },
-
     // Speech/Audio
     speech: {
         cacheDir: process.env.FLY_APP_NAME ? '/data/speech' : 'data/speech',

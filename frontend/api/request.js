@@ -7,7 +7,6 @@ export function getHeaders(includeAuth = true) {
   if (includeAuth) {
     const token = localStorage.getItem(STORAGE_KEYS.SESSION_TOKEN);
     if (token && token !== 'true' && token !== 'false') {
-      headers['x-session-token'] = token;
       headers['Authorization'] = `Bearer ${token}`;
     }
   }

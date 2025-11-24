@@ -14,11 +14,10 @@ export async function verifyPin(pin) {
   }
 }
 
-export async function verifyToken(token) {
+export async function verifyToken() {
   try {
     return await request('/api/auth/verify-token', {
-      method: 'POST',
-      body: JSON.stringify({ token })
+      method: 'POST'
     });
   } catch (error) {
     console.error('Error verifying token:', error);

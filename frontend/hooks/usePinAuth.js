@@ -18,7 +18,7 @@ export function usePinAuth() {
 
       if (token) {
         // Verify token with backend
-        const result = await verifyTokenApi(token);
+        const result = await verifyTokenApi();
         if (result.valid) {
           setIsAuthenticated(true);
         } else {
