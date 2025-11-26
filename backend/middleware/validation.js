@@ -18,8 +18,7 @@ const validators = {
         body(fieldName)
             .trim()
             .isLength({ min: 1, max: 200 })
-            .withMessage(message)
-            .escape(),
+            .withMessage(message),
 
     wordId: () =>
         param('id')
@@ -38,8 +37,7 @@ const validators = {
             .optional()
             .trim()
             .isLength({ max: maxLength })
-            .withMessage(`Example ${fieldName} text too long`)
-            .escape(),
+            .withMessage(`Example ${fieldName} text too long`),
 
     speechFilename: () =>
         body('speech')
@@ -54,8 +52,7 @@ const validators = {
         body(fieldName)
             .trim()
             .isLength({ min: minLength, max: maxLength })
-            .withMessage(`${fieldName} must be ${minLength}-${maxLength} characters`)
-            .escape(),
+            .withMessage(`${fieldName} must be ${minLength}-${maxLength} characters`),
 
     languageCode: (fieldName) =>
         body(fieldName)
