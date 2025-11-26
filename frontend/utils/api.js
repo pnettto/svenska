@@ -1,12 +1,4 @@
-// This file has been refactored. All API functions are now in /frontend/api/
-// Import from the specific API modules instead:
-//   - wordApi.js - Word CRUD operations
-//   - authApi.js - Authentication (verifyPin, verifyToken)
-//   - speechApi.js - Text-to-speech generation
-//   - aiApi.js - AI features (generateExamples, translate)
-//   - request.js - Shared request utility
+// All API functions have been consolidated into /frontend/api/index.js
+// Re-export everything from there for backwards compatibility
 
-export * from '../api/wordApi.js';
-export * from '../api/authApi.js';
-export * from '../api/speechApi.js';
-export * from '../api/aiApi.js';
+export * from '../api/index.js';

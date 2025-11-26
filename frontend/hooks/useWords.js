@@ -1,6 +1,6 @@
 import { useState, useEffect } from '../libs/hooks.module.js';
 import { storage } from '../utils/storage.js';
-import { getAllWords } from '../api/wordApi.js';
+import { getAllWords } from '../api/index.js';
 
  // Shuffle array using Fisher-Yates algorithm
 function shuffle(array) {

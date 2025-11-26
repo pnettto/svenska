@@ -1,6 +1,6 @@
 import { html } from '../htm.js';
 import { useState } from '../libs/hooks.module.js';
-import { utilsApi } from '../api/index.js';
+import { exportWords } from '../api/index.js';
 
 export function WordTableModal({ 
   isOpen, 
@@ -47,7 +47,7 @@ export function WordTableModal({
 
   const handleExport = async () => {
     try {
-      const { blob, filename } = await utilsApi.exportWords();
+      const { blob, filename } = await exportWords();
       
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);

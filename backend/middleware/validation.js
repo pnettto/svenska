@@ -4,12 +4,67 @@ const { body, param, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             error: 'Validation failed',
-            details: errors.array() 
+            details: errors.array()
         });
     }
     next();
+};
+
+// Reusable validation chains
+const validators = {
+    wordField: (fieldName, message) =>
+        body(fieldName)
+            .trim()
+            .isLength({ min: 1, max: 200 })
+            .withMessage(message)
+            .escape(),
+
+    wordId: () =>
+        param('id')
+            .trim()
+            .isLength({ min: 1, max: 100 })
+            .withMessage('Invalid word ID'),
+
+    examples: () =>
+        body('examples')
+            .optional()
+            .isArray()
+            .withMessage('Examples must be an array'),
+
+    exampleField: (fieldName, maxLength = 500) =>
+        body(`examples.*.${fieldName}`)
+            .optional()
+            .trim()
+            .isLength({ max: maxLength })
+            .withMessage(`Example ${fieldName} text too long`)
+            .escape(),
+
+    speechFilename: () =>
+        body('speech')
+            .optional()
+            .isString()
+            .isLength({ max: 100 })
+            .withMessage('Speech filename too long')
+            .matches(/^[a-zA-Z0-9_\-\.]*$/)
+            .withMessage('Invalid speech filename format'),
+
+    text: (fieldName, minLength, maxLength) =>
+        body(fieldName)
+            .trim()
+            .isLength({ min: minLength, max: maxLength })
+            .withMessage(`${fieldName} must be ${minLength}-${maxLength} characters`)
+            .escape(),
+
+    languageCode: (fieldName) =>
+        body(fieldName)
+            .optional()
+            .trim()
+            .isLength({ min: 2, max: 5 })
+            .withMessage('Invalid language code')
+            .matches(/^[a-z]{2}(-[A-Z]{2})?$/)
+            .withMessage('Language code must be ISO format')
 };
 
 // Common validation rules
@@ -17,60 +72,19 @@ const validation = {
     // Word validation
     word: {
         create: [
-            body('original')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Original word must be 1-200 characters')
-                .escape(),
-            body('translation')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Translation must be 1-200 characters')
-                .escape(),
-            body('examples')
-                .optional()
-                .isArray()
-                .withMessage('Examples must be an array'),
-            body('examples.*.swedish')
-                .optional()
-                .trim()
-                .isLength({ max: 500 })
-                .withMessage('Example Swedish text too long')
-                .escape(),
-            body('examples.*.english')
-                .optional()
-                .trim()
-                .isLength({ max: 500 })
-                .withMessage('Example English text too long')
-                .escape(),
-            body('speech')
-                .optional()
-                .isString()
-                .isLength({ max: 100 })
-                .withMessage('Speech filename too long')
-                .matches(/^[a-zA-Z0-9_\-\.]*$/)
-                .withMessage('Invalid speech filename format'),
+            validators.wordField('original', 'Original word must be 1-200 characters'),
+            validators.wordField('translation', 'Translation must be 1-200 characters'),
+            validators.examples(),
+            validators.exampleField('swedish'),
+            validators.exampleField('english'),
+            validators.speechFilename(),
             handleValidationErrors
         ],
         update: [
-            param('id')
-                .trim()
-                .isLength({ min: 1, max: 100 })
-                .withMessage('Invalid word ID'),
-            body('original')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Original word must be 1-200 characters')
-                .escape(),
-            body('translation')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Translation must be 1-200 characters')
-                .escape(),
-            body('examples')
-                .optional()
-                .isArray()
-                .withMessage('Examples must be an array'),
+            validators.wordId(),
+            validators.wordField('original', 'Original word must be 1-200 characters'),
+            validators.wordField('translation', 'Translation must be 1-200 characters'),
+            validators.examples(),
             body('speech')
                 .optional()
                 .isString()
@@ -79,10 +93,7 @@ const validation = {
             handleValidationErrors
         ],
         patch: [
-            param('id')
-                .trim()
-                .isLength({ min: 1, max: 100 })
-                .withMessage('Invalid word ID'),
+            validators.wordId(),
             body('incrementReadCount')
                 .optional()
                 .isBoolean()
@@ -95,17 +106,11 @@ const validation = {
             handleValidationErrors
         ],
         delete: [
-            param('id')
-                .trim()
-                .isLength({ min: 1, max: 100 })
-                .withMessage('Invalid word ID'),
+            validators.wordId(),
             handleValidationErrors
         ],
         getById: [
-            param('id')
-                .trim()
-                .isLength({ min: 1, max: 100 })
-                .withMessage('Invalid word ID'),
+            validators.wordId(),
             handleValidationErrors
         ]
     },
@@ -113,16 +118,8 @@ const validation = {
     // AI validation
     ai: {
         generateExamples: [
-            body('swedishWord')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('Swedish word must be 1-200 characters')
-                .escape(),
-            body('englishTranslation')
-                .trim()
-                .isLength({ min: 1, max: 200 })
-                .withMessage('English translation must be 1-200 characters')
-                .escape(),
+            validators.wordField('swedishWord', 'Swedish word must be 1-200 characters'),
+            validators.wordField('englishTranslation', 'English translation must be 1-200 characters'),
             body('existingExamples')
                 .optional()
                 .isArray()
@@ -135,25 +132,9 @@ const validation = {
             handleValidationErrors
         ],
         translate: [
-            body('text')
-                .trim()
-                .isLength({ min: 1, max: 2000 })
-                .withMessage('Text must be 1-2000 characters')
-                .escape(),
-            body('sourceLang')
-                .optional()
-                .trim()
-                .isLength({ min: 2, max: 5 })
-                .withMessage('Invalid source language code')
-                .matches(/^[a-z]{2}(-[A-Z]{2})?$/)
-                .withMessage('Language code must be ISO format'),
-            body('targetLang')
-                .optional()
-                .trim()
-                .isLength({ min: 2, max: 5 })
-                .withMessage('Invalid target language code')
-                .matches(/^[a-z]{2}(-[A-Z]{2})?$/)
-                .withMessage('Language code must be ISO format'),
+            validators.text('text', 1, 2000),
+            validators.languageCode('sourceLang'),
+            validators.languageCode('targetLang'),
             handleValidationErrors
         ]
     },
@@ -174,11 +155,7 @@ const validation = {
     // Speech validation
     speech: {
         tts: [
-            body('text')
-                .trim()
-                .isLength({ min: 1, max: 500 })
-                .withMessage('Text must be 1-500 characters')
-                .escape(),
+            validators.text('text', 1, 500),
             handleValidationErrors
         ],
         getFile: [

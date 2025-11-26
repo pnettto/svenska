@@ -1,5 +1,5 @@
 import { useState } from '../libs/hooks.module.js';
-import { updateWord } from '../api/wordApi.js';
+import { updateWord } from '../api/index.js';
 import { audio } from '../utils/audio.js';
 import { examples as examplesService } from '../utils/examples.js';
 import { storage } from '../utils/storage.js';

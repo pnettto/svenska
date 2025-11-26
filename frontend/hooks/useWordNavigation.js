@@ -1,5 +1,5 @@
 import { useState, useEffect } from '../libs/hooks.module.js';
-import { incrementReadCount } from '../api/wordApi.js';
+import { incrementReadCount } from '../api/index.js';
 import { audio } from '../utils/audio.js';
 import { storage } from '../utils/storage.js';
 

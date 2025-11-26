@@ -1,4 +1,12 @@
-import { STORAGE_KEYS, API_BASE_URL } from '../constants.js';
+import { API_BASE_URL } from '../constants.js';
+
+// Storage keys
+const STORAGE_KEYS = {
+    CACHE: 'swedishWords',
+    SESSION_TOKEN: 'sessionToken',
+    INTERACTION_COUNT: 'interactionCount',
+    API_BASE_URL: 'apiBaseUrl',
+};
 
 // LocalStorage utility functions
 export const storage = {

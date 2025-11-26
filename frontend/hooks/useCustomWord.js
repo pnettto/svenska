@@ -1,5 +1,5 @@
 import { useState } from '../libs/hooks.module.js';
-import { createWord, generateRandomWord as generateRandomWordApi } from '../api/wordApi.js';
+import { createWord, generateRandomWord as generateRandomWordApi } from '../api/index.js';
 import { words } from '../utils/words.js';
 import { storage } from '../utils/storage.js';
 

@@ -1,5 +1,4 @@
 const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
 const config = require('../config');
 
 const passDevServer = () => {
@@ -43,17 +42,8 @@ const aiLimiter = passDevServer() || rateLimit({
     message: 'Too many AI requests, please try again later',
 });
 
-// Speed limiter - slows down requests instead of blocking
-const speedLimiter = passDevServer() || slowDown({
-    windowMs: 15 * 60 * 1000,
-    delayAfter: 50,
-    delayMs: (hits) => hits * 100,
-    maxDelayMs: 20000
-});
-
 module.exports = {
     globalLimiter,
     authLimiter,
-    aiLimiter,
-    speedLimiter
+    aiLimiter
 };

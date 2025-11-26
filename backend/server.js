@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const routes = require('./routes');
 const config = require('./config');
-const { globalLimiter, speedLimiter } = require('./middleware/rateLimiter');
+const { globalLimiter } = require('./middleware/rateLimiter');
 const requestLogger = require('./middleware/requestLogger');
 
 const app = express();
@@ -64,7 +64,6 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: config.security.requestSizeLimit }));
 
 // Security: Rate limiting
-app.use('/api', speedLimiter);
 app.use('/api', globalLimiter);
 
 // Observability: log every API request with user details (if any)

@@ -1,5 +1,5 @@
 // Word management and navigation utilities
-import { translate as translateApi } from '../api/aiApi.js';
+import { translate as translateApi } from '../api/index.js';
 
 export const words = {
     // Translate a Swedish word to English

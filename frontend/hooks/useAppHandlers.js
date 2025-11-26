@@ -1,4 +1,4 @@
-import { deleteWord } from '../api/wordApi.js';
+import { deleteWord } from '../api/index.js';
 
 /**
  * Centralized event handlers for the app

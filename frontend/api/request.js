@@ -1,4 +1,4 @@
-import { API_BASE_URL, STORAGE_KEYS } from '../constants.js';
+import { API_BASE_URL } from '../constants.js';
 import { storage } from '../utils/storage.js';
 
 // Get headers with session token if available

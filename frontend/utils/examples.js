@@ -1,6 +1,6 @@
 // Examples generation and management utilities
 import { audio } from './audio.js';
-import { generateExamples } from '../api/aiApi.js';
+import { generateExamples } from '../api/index.js';
 
 export const examples = {
     // Fetch new examples from the API

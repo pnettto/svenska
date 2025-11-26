@@ -1,5 +1,5 @@
 import { useState } from '../libs/hooks.module.js';
-import { updateWord as updateWordApi } from '../api/wordApi.js';
+import { updateWord as updateWordApi } from '../api/index.js';
 
 /**
  * Manages word editing

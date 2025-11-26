@@ -1,6 +1,6 @@
 import { useState, useEffect } from '../libs/hooks.module.js';
 import { storage } from '../utils/storage.js';
-import { verifyPin as verifyPinApi, verifyToken as verifyTokenApi } from '../api/authApi.js';
+import { verifyPin as verifyPinApi, verifyToken as verifyTokenApi } from '../api/index.js';
 
 /**
  * Manages PIN authentication state and interaction counting
