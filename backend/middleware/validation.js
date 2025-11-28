@@ -123,6 +123,7 @@ const validation = {
                 .withMessage('Existing examples must be an array'),
             body('wordId')
                 .optional()
+                .customSanitizer(value => String(value))
                 .isString()
                 .isLength({ max: 100 })
                 .withMessage('Invalid word ID'),
