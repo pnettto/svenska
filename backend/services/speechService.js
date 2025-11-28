@@ -9,7 +9,7 @@ class SpeechService {
         this.cacheDir = config.speech.cacheDir;
         this.voiceName = config.speech.defaultVoice;
         this.languageCode = config.speech.languageCode;
-        
+
         this._ensureCacheDirectory();
     }
 
@@ -75,7 +75,6 @@ class SpeechService {
 
     async synthesize(text) {
         const filename = this.generateFilename(text);
-        const cachePath = this.getCachePath(filename);
 
         if (this.isCached(filename)) {
             return {
