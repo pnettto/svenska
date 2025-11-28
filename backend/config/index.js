@@ -36,7 +36,7 @@ module.exports = {
     auth: {
         pin: process.env.PIN,
         sessionSecret: process.env.SESSION_SECRET,
-        sessionMaxAge: 24 * 60 * 60 * 1000 // 24 hours
+        sessionMaxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     },
 
     // CORS
