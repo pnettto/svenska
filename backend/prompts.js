@@ -37,7 +37,7 @@ const prompts = {
             const randomType = wordTypes[Math.floor(Math.random() * wordTypes.length)];
             const timestamp = Date.now();
 
-            return `Generate ONE random Swedish ${randomType} related to "${randomCategory}". Make it practical and useful. Seed: ${timestamp}. Return as JSON: {"swedish": "...", "english": "..."}`;
+            return `Generate ONE random Swedish ${randomType} related to "${randomCategory}". Make it practical and useful. Seed: ${timestamp}. For the English, provide the natural English equivalent or counterpart that captures the actual meaning and usage, not a literal word-for-word translation. Return as JSON: {"swedish": "...", "english": "..."}`;
         }
     }
 };
