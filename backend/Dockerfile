@@ -20,7 +20,7 @@ FROM base AS build
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
+    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3 zip tiny-vim
 
 # Install node modules
 COPY package.json yarn.lock ./
@@ -35,6 +35,9 @@ FROM base
 
 # Copy built application
 COPY --from=build /app /app
+
+# Create a link to the data
+RUN ln -s /app/data /data
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
