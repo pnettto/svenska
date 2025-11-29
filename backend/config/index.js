@@ -9,12 +9,12 @@ module.exports = {
 
     // Database
     database: {
-        path: process.env.FLY_APP_NAME ? '/data/words.db' : 'data/words.db'
+        path: process.env.DB_PATH || (process.env.FLY_APP_NAME ? '/data/words.db' : 'data/words.db')
     },
 
     // Speech/Audio
     speech: {
-        cacheDir: process.env.FLY_APP_NAME ? '/data/speech' : 'data/speech',
+        cacheDir: process.env.SPEECH_CACHE_DIR || (process.env.FLY_APP_NAME ? '/data/speech' : 'data/speech'),
         defaultVoice: 'Astrid',
         languageCode: 'sv-SE'
     },

@@ -14,6 +14,7 @@ router.post('/tts', requireAuth, validation.speech.tts, async (req, res) => {
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('X-Cache', result.cached ? 'HIT' : 'MISS');
         res.setHeader('X-Speech-File', result.filename);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.send(result.audio);
     } catch (error) {
         console.error('Polly TTS error:', error);
@@ -34,6 +35,7 @@ router.get('/:filename', validation.speech.getFile, (req, res) => {
         const audioBuffer = speechService.readCached(filename);
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.send(audioBuffer);
     } catch (error) {
         res.status(500).json({ error: 'Failed to read speech file' });

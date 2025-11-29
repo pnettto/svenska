@@ -2,6 +2,7 @@ const loki = require('lokijs');
 const config = require('../config');
 const path = require('path');
 const fs = require('fs');
+const speechService = require('./speechService');
 
 class WordService {
     constructor() {
@@ -80,6 +81,25 @@ class WordService {
         return this._addId(this.words.findOne({ $loki: parseInt(id) }));
     }
 
+    async _ensureSpeechForExamples(examples) {
+        if (!examples || !Array.isArray(examples)) return [];
+
+        const processedExamples = [];
+        for (const example of examples) {
+            const processed = { ...example };
+            if (!processed.speech && processed.swedish) {
+                try {
+                    const result = await speechService.synthesize(processed.swedish);
+                    processed.speech = result.filename;
+                } catch (error) {
+                    console.error(`[WordService] Failed to generate speech for example "${processed.swedish}":`, error);
+                }
+            }
+            processedExamples.push(processed);
+        }
+        return processedExamples;
+    }
+
     async createWord(original, translation, examples = [], speech = null) {
         await this._ensureInitialized();
 
@@ -88,12 +108,26 @@ class WordService {
             throw new Error('Word already exists');
         }
 
+        // Generate speech for the word if not provided
+        let speechFilename = speech;
+        if (!speechFilename) {
+            try {
+                const result = await speechService.synthesize(original);
+                speechFilename = result.filename;
+            } catch (error) {
+                console.error(`[WordService] Failed to generate speech for word "${original}":`, error);
+            }
+        }
+
+        // Generate speech for examples
+        const processedExamples = await this._ensureSpeechForExamples(examples);
+
         const doc = this.words.insert({
             original,
             translation,
-            examples,
+            examples: processedExamples,
             read_count: 0,
-            speech,
+            speech: speechFilename,
             createdAt: new Date(),
             updatedAt: new Date()
         });
@@ -116,8 +150,22 @@ class WordService {
 
         word.original = original;
         word.translation = translation;
-        word.examples = examples;
-        word.speech = speech;
+
+        // Generate speech for the word if not provided and missing
+        if (speech) {
+            word.speech = speech;
+        } else if (!word.speech) {
+            try {
+                const result = await speechService.synthesize(original);
+                word.speech = result.filename;
+            } catch (error) {
+                console.error(`[WordService] Failed to generate speech for word "${original}":`, error);
+            }
+        }
+
+        // Generate speech for examples
+        word.examples = await this._ensureSpeechForExamples(examples);
+
         word.updatedAt = new Date();
 
         this.words.update(word);
