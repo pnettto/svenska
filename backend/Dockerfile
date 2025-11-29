@@ -36,9 +36,6 @@ FROM base
 # Copy built application
 COPY --from=build /app /app
 
-# Create a link to the data
-RUN ln -s /app/data /data
-
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
 CMD [ "yarn", "run", "start" ]
