@@ -2,14 +2,14 @@ import { useState, useEffect } from '../libs/hooks.module.js';
 import { storage } from '../utils/storage.js';
 import { getAllWords } from '../api/index.js';
 
- // Shuffle array using Fisher-Yates algorithm
+// Shuffle array using Fisher-Yates algorithm
 function shuffle(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 /**
@@ -77,6 +77,8 @@ export function useWords({ fetchEnabled = true } = {}) {
     setShuffledWords(prev => {
       const words = [...prev];
       words.splice(position, 0, word);
+      // Update cached words to include the new word
+      storage.saveWords(words);
       return words;
     });
   };
@@ -86,17 +88,31 @@ export function useWords({ fetchEnabled = true } = {}) {
   };
 
   const updateWord = (updatedWord) => {
-    setShuffledWords(prev => 
-      prev.map(word => word._id === updatedWord._id ? updatedWord : word)
-    );
+    setShuffledWords(prev => {
+      const updated = prev.map(word => word._id === updatedWord._id ? updatedWord : word);
+      // Update cached words to include the edited word
+      storage.saveWords(updated);
+      return updated;
+    });
   };
 
   const getInitialWord = () => shuffledWords[0];
 
   const findWordById = (wordId) => {
-    return shuffledWords.find(word => 
-      word._id === wordId || word.swedish === wordId
+    // Convert to both string and number for comparison since localStorage stores strings
+    const wordIdNum = parseInt(wordId);
+    const wordIdStr = String(wordId);
+
+    return shuffledWords.find(word =>
+      word._id === wordIdNum ||
+      word._id === wordIdStr ||
+      word.swedish === wordId ||
+      String(word._id) === wordIdStr
     );
+  };
+
+  const incrementShuffleIndex = () => {
+    setShuffledIndex(prev => prev + 1);
   };
 
   return {
@@ -107,6 +123,7 @@ export function useWords({ fetchEnabled = true } = {}) {
     removeWord,
     updateWord,
     getInitialWord,
-    findWordById
+    findWordById,
+    incrementShuffleIndex
   };
 }

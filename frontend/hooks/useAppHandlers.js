@@ -25,7 +25,7 @@ export function useAppHandlers({
   // Handle previous word navigation
   const handlePrevious = withPinAuth(() => {
     if (examples.isGeneratingExamples) return;
-    
+
     const prevWord = navigation.goToPrevious();
     if (prevWord) {
       interaction.reset();
@@ -55,7 +55,11 @@ export function useAppHandlers({
   const handleSubmitCustomWord = withPinAuth(async (swedish, english) => {
     try {
       await customWord.submitCustomWord(swedish, (newWord) => {
+        // Insert word at current position so it's available in word list
         words.insertWord(newWord, words.shuffledIndex);
+        // Increment index so "next" doesn't show the same word we just inserted
+        words.incrementShuffleIndex();
+        // Display the new word
         navigation.displayWord(newWord);
         interaction.reset();
         examples.reset();
@@ -74,7 +78,8 @@ export function useAppHandlers({
       await editWord.updateWord(swedish, english, (updatedWord) => {
         words.updateWord(updatedWord);
         if (navigation.currentWord?._id === editWord.editingWord._id) {
-          navigation.displayWord(updatedWord);
+          // Update the word in current history position instead of adding new entry
+          navigation.updateCurrentWordInHistory(updatedWord);
         }
       });
     } catch (error) {

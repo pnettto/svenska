@@ -1,10 +1,10 @@
 import { html } from '../htm.js';
-import { useState } from '../libs/hooks.module.js';
+import { useState, useEffect, useRef } from '../libs/hooks.module.js';
 import { exportWords } from '../api/index.js';
 
-export function WordTableModal({ 
-  isOpen, 
-  onClose, 
+export function WordTableModal({
+  isOpen,
+  onClose,
   words,
   onSelectWord,
   onDeleteWord,
@@ -13,6 +13,14 @@ export function WordTableModal({
   const [showTranslations, setShowTranslations] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
+  const searchInputRef = useRef();
+
+  // Auto-focus search input when modal opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen]);
 
   const handleClose = () => {
     setSearchTerm('');
@@ -48,18 +56,18 @@ export function WordTableModal({
   const handleExport = async () => {
     try {
       const { blob, filename } = await exportWords();
-      
+
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export words:', error);
@@ -70,11 +78,11 @@ export function WordTableModal({
   if (!isOpen) return null;
 
   // Filter and sort words
-  const filteredWords = searchTerm 
-    ? words.filter(word => 
-        word.original?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.translation?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const filteredWords = searchTerm
+    ? words.filter(word =>
+      word.original?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      word.translation?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : words;
 
   const sortedWords = [...filteredWords].sort((a, b) => {
@@ -97,6 +105,7 @@ export function WordTableModal({
         
         <div class="word-table-controls">
           <input 
+            ref=${searchInputRef}
             type="text"
             class="word-table-search"
             placeholder="Sök ord..."

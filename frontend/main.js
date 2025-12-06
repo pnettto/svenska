@@ -12,6 +12,7 @@ import { useEditWord } from './hooks/useEditWord.js';
 import { useWordInteraction } from './hooks/useWordInteraction.js';
 import { usePinAuth } from './hooks/usePinAuth.js';
 import { useAppHandlers } from './hooks/useAppHandlers.js';
+import { storage } from './utils/storage.js';
 
 /**
  * Main App Component
@@ -41,10 +42,23 @@ function App() {
 
   // Initialize with first word when available
   useEffect(() => {
+    // Only run when we first get words (transition from 0 to N words)
+    // Don't run when words are added/removed after initialization
     if (words.shuffledWords.length === 0) return;
-    
+    if (navigation.currentWord !== null) return; // Already initialized
+
+    // Priority 1: Check localStorage for last viewed word (for Chrome extension back button)
+    const lastViewedWordId = storage.getLastViewedWordId();
+    if (lastViewedWordId) {
+      const lastWord = words.findWordById(lastViewedWordId);
+      if (lastWord) {
+        navigation.displayWord(lastWord);
+        return;
+      }
+    }
+
+    // Priority 2: Check URL for word parameter
     const wordIdFromUrl = navigation.getInitialWordIdFromUrl();
-    
     if (wordIdFromUrl) {
       const wordFromUrl = words.findWordById(wordIdFromUrl);
       if (wordFromUrl) {
@@ -52,7 +66,8 @@ function App() {
         return;
       }
     }
-    
+
+    // Priority 3: Load first shuffled word
     const initialWord = words.getInitialWord();
     if (initialWord) {
       navigation.displayWord(initialWord);
@@ -74,10 +89,10 @@ function App() {
         customWord=${customWord}
         editWord=${editWord}
         wordTable=${{
-          isOpen: wordTableOpen,
-          onClose: () => setWordTableOpen(false),
-          words: words.shuffledWords
-        }}
+      isOpen: wordTableOpen,
+      onClose: () => setWordTableOpen(false),
+      words: words.shuffledWords
+    }}
         pinAuth=${pinAuth}
         handlers=${handlers}
       />
@@ -90,11 +105,11 @@ function App() {
         showExamples=${examples.showExamples}
         examples=${examples.examples}
         handlers=${{
-          ...handlers,
-          handlePlay: () => interaction.playAudio(navigation.currentWord),
-          handlePlayExample: (example, index) => 
-            examples.playExample(example, navigation.currentWord, index)
-        }}
+      ...handlers,
+      handlePlay: () => interaction.playAudio(navigation.currentWord),
+      handlePlayExample: (example, index) =>
+        examples.playExample(example, navigation.currentWord, index)
+    }}
       />
     </div>
   `;

@@ -148,13 +148,24 @@ class WordService {
             throw new Error('Word not found');
         }
 
+        // Store old original for comparison
+        const oldOriginal = word.original;
         word.original = original;
         word.translation = translation;
 
-        // Generate speech for the word if not provided and missing
+        // Regenerate speech if word text changed
         if (speech) {
             word.speech = speech;
+        } else if (original !== oldOriginal) {
+            // Word text changed, regenerate speech
+            try {
+                const result = await speechService.synthesize(original);
+                word.speech = result.filename;
+            } catch (error) {
+                console.error(`[WordService] Failed to generate speech for word "${original}":`, error);
+            }
         } else if (!word.speech) {
+            // Generate if missing
             try {
                 const result = await speechService.synthesize(original);
                 word.speech = result.filename;

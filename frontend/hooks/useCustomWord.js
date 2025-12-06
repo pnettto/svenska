@@ -14,7 +14,7 @@ export function useCustomWord() {
 
   const generateRandomWord = async () => {
     setIsGeneratingRandom(true);
-    
+
     try {
       const result = await generateRandomWordApi();
       if (!result) {
@@ -47,7 +47,7 @@ export function useCustomWord() {
       if (!newWord) throw new Error('Failed to create word');
 
       setModalOpen(false);
-      
+
       if (onSuccess) {
         onSuccess(newWord);
       }

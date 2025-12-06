@@ -49,6 +49,11 @@ export function useWordNavigation() {
   const displayWord = (word, addToHistory = true) => {
     setCurrentWord(word);
 
+    // Save to localStorage for Chrome extension back button support
+    if (word._id || word.swedish) {
+      storage.setLastViewedWordId(word._id || word.swedish);
+    }
+
     if (addToHistory) {
       // Truncate future history and add new word
       const newHistory = [
@@ -69,8 +74,14 @@ export function useWordNavigation() {
           word: { ...word, examples: word.examples || [] }
         };
 
-        // Use pushState to create a new history entry
-        window.history.pushState(state, '', url);
+        // Use replaceState for the first word to avoid creating extra history entry
+        // This ensures browser back button works correctly when returning to the page
+        if (newIndex === 0) {
+          window.history.replaceState(state, '', url);
+        } else {
+          // Use pushState for subsequent words
+          window.history.pushState(state, '', url);
+        }
       }
 
       // Reset browser navigation flag
@@ -116,6 +127,22 @@ export function useWordNavigation() {
     });
   };
 
+  const updateCurrentWordInHistory = (updatedWord) => {
+    setCurrentWord(updatedWord);
+    setWordHistory(prev => {
+      const newHistory = [...prev];
+      if (historyIndex >= 0 && historyIndex < newHistory.length) {
+        newHistory[historyIndex] = { ...updatedWord, examples: updatedWord.examples || [] };
+      }
+      return newHistory;
+    });
+
+    // Save to localStorage for Chrome extension back button support
+    if (updatedWord._id || updatedWord.swedish) {
+      storage.setLastViewedWordId(updatedWord._id || updatedWord.swedish);
+    }
+  };
+
   const canGoPrevious = historyIndex > 0;
   const canGoNext = historyIndex < wordHistory.length - 1;
 
@@ -134,6 +161,7 @@ export function useWordNavigation() {
     canGoPrevious,
     canGoNext,
     updateExamplesInHistory,
+    updateCurrentWordInHistory,
     getInitialWordIdFromUrl
   };
 }

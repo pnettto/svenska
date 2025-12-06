@@ -65,5 +65,16 @@ export const storage = {
 
     resetInteractionCount() {
         localStorage.setItem(STORAGE_KEYS.INTERACTION_COUNT, '0');
+    },
+
+    // Last viewed word (for browser back button support in Chrome extension)
+    getLastViewedWordId() {
+        return localStorage.getItem('lastViewedWordId');
+    },
+
+    setLastViewedWordId(wordId) {
+        if (wordId) {
+            localStorage.setItem('lastViewedWordId', wordId);
+        }
     }
 };
